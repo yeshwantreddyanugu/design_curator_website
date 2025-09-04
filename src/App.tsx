@@ -14,7 +14,7 @@ import Orders from "./pages/Orders";
 import NotFound from "./pages/NotFound";
 import ProductItems from "./pages/productItems";
 import ProductPayment from "./pages/ProductPayment";
-import Contacts from "./pages/contacts";
+import Contacts from "./pages/Contacts";
 import ScrollToTop from './components/ScrollToTop';
 
 const queryClient = new QueryClient();
