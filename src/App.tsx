@@ -26,7 +26,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter basename="/design_curator_website/">
+          <BrowserRouter basename="/">
             <ScrollToTop /> {/* Add ScrollToTop here */}
             <Routes>
               <Route path="/" element={<Index />} />
