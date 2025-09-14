@@ -3,54 +3,18 @@ import { Badge } from "@/components/ui/badge";
 import { useNewArrivalDesigns } from "@/hooks/useDesigns";
 import DownloadButton from "@/components/DownloadButton";
 import patternGrid from "@/assets/pattern-grid.jpg";
-
-const newArrivals = [
-  {
-    title: "Sunset Palms",
-    designer: "Maria Santos", 
-    category: "Tropical",
-    image: patternGrid,
-    isNew: true
-  },
-  {
-    title: "Modern Minimalist",
-    designer: "Alex Chen",
-    category: "Geometric", 
-    image: patternGrid,
-    isNew: true
-  },
-  {
-    title: "Garden Dreams",
-    designer: "Emma Wilson",
-    category: "Floral",
-    image: patternGrid,
-    isNew: true
-  },
-  {
-    title: "Urban Abstract",
-    designer: "David Kim",
-    category: "Abstract",
-    image: patternGrid,
-    isNew: true
-  },
-  {
-    title: "Vintage Checks",
-    designer: "Sarah Johnson", 
-    category: "Traditional",
-    image: patternGrid,
-    isNew: true
-  },
-  {
-    title: "Ocean Waves",
-    designer: "Lucas Rivera",
-    category: "Nature",
-    image: patternGrid,
-    isNew: true
-  }
-];
+import { useNavigate } from "react-router-dom"; // Add this import
 
 const NewArrivals = () => {
   const { data: newArrivalsData, isLoading, error } = useNewArrivalDesigns({ size: 6 });
+  const navigate = useNavigate(); // Add this hook
+
+  // Add this function to handle design clicks
+  const handleViewDesign = (design: any) => {
+    if (design.id) {
+      navigate(`/design/${design.id}`);
+    }
+  };
 
   const newArrivals = newArrivalsData?.content?.slice(0, 6).map((design) => ({
     id: design.id,
@@ -109,9 +73,9 @@ const NewArrivals = () => {
   }
 
   return (
-    <section className="py-16 bg-muted/20">
+    <section className="py-1 bg-muted/20">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <div className="text-center mb-2">
           <h2 className="font-display text-4xl font-bold text-foreground mb-4">
             New Arrivals
           </h2>
@@ -128,7 +92,11 @@ const NewArrivals = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {newArrivals.map((item, index) => (
-            <Card key={index} className="group pattern-hover border-0 shadow-soft">
+            <Card 
+              key={index} 
+              className="group pattern-hover border-0 shadow-soft cursor-pointer" // Add cursor-pointer
+              onClick={() => handleViewDesign(item)} // Add onClick handler
+            >
               <CardContent className="p-0">
                 <div className="relative overflow-hidden rounded-lg">
                   <img
@@ -155,7 +123,7 @@ const NewArrivals = () => {
                   </div>
                 </div>
                 
-                <div className="p-4">
+                {/* <div className="p-4">
                   {item.id && (
                     <DownloadButton 
                       designId={item.id} 
@@ -164,7 +132,7 @@ const NewArrivals = () => {
                       className="w-full"
                     />
                   )}
-                </div>
+                </div> */}
               </CardContent>
             </Card>
           ))}

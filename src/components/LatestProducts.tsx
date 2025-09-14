@@ -1,5 +1,3 @@
-
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +19,8 @@ const LatestProducts = () => {
   const { user } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  const handleQuickAdd = (product: any) => {
+  const handleQuickAdd = (product: any, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event from firing
     console.log("Add to cart clicked for product:", product);
     console.log("Current user authentication status:", !!user);
 
@@ -76,7 +75,8 @@ const LatestProducts = () => {
     // }
   };
 
-  const handleViewProduct = (product: any) => {
+  const handleViewProduct = (product: any, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event from firing
     console.log("View product clicked for:", product);
 
     if (product.id) {
@@ -84,6 +84,19 @@ const LatestProducts = () => {
       navigate(`/product/${product.id}`);
     } else {
       console.log("Product ID not available, showing error toast");
+      toast({
+        title: "Product unavailable",
+        description: "This product is currently not available for detailed view.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCardClick = (product: any) => {
+    console.log('👆 Product card clicked:', product.id);
+    if (product.id) {
+      navigate(`/product/${product.id}`);
+    } else {
       toast({
         title: "Product unavailable",
         description: "This product is currently not available for detailed view.",
@@ -204,7 +217,7 @@ const LatestProducts = () => {
 
   return (
     <>
-      <section className="py-16 bg-background">
+      <section className="py-1 bg-background pb-6">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="font-display text-4xl font-bold text-foreground mb-4">
@@ -225,7 +238,11 @@ const LatestProducts = () => {
             {latestProducts.map((product, index) => {
               console.log("Rendering product card:", product, "at index:", index);
               return (
-                <Card key={index} className="group pattern-hover border-0 shadow-soft">
+                <Card 
+                  key={index} 
+                  className="group pattern-hover border-0 shadow-soft cursor-pointer"
+                  onClick={() => handleCardClick(product)}
+                >
                   <CardContent className="p-0">
                     <div className="relative overflow-hidden rounded-lg">
                       <img
@@ -299,7 +316,24 @@ const LatestProducts = () => {
                         )}
                       </div>
 
-
+                      {/* <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1"
+                          onClick={(e) => handleQuickAdd(product, e)}
+                          disabled={!product.stockQuantity || product.stockQuantity === 0}
+                        >
+                          <ShoppingCart className="h-4 w-4 mr-1" />
+                          Add to Cart
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => handleViewProduct(product, e)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div> */}
                     </div>
                   </CardContent>
                 </Card>
