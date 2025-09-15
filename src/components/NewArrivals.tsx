@@ -19,7 +19,7 @@ const NewArrivals = () => {
   const newArrivals = newArrivalsData?.content?.slice(0, 6).map((design) => ({
     id: design.id,
     title: design.designName,
-    designer: design.designedBy || "PatternBank Designer",
+    designer: design.designedBy || "Aza Arts Designer",
     category: design.category,
     image: design.imageUrls?.[0] || patternGrid,
     isNew: design.isNewArrival

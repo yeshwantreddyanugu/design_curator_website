@@ -49,33 +49,14 @@ declare global {
 }
 
 interface OrderData {
-  orderId: string;
   uid: string;
   email: string;
   name: string;
   phone: string;
   address: string;
-  design: {
-    id: number;
-    designName: string;
-    category: string;
-    subcategory: string;
-    price: number;
-    discountPrice?: number;
-    availableColors: string[];
-    imageUrls: string[];
-    tags: string[];
-    description: string;
-    fileSizePx: string;
-    fileSizeCm: string;
-    dpi: number;
-    includedFiles: string;
-    licenseType: string;
-    designedBy: string;
-  };
+  designs: { id: number }[];
   quantity: number;
   totalAmount: number;
-  contactDetails: string;
 }
 
 interface CreateOrderResponse {
@@ -124,7 +105,7 @@ const Checkout = () => {
   });
 
   // Base API URL
-  const API_BASE_URL = 'https://az.lytortech.com/api';
+  const API_BASE_URL = 'https://028f702fdabc.ngrok-free.app/api';
 
   // Razorpay key
   const RAZORPAY_KEY = 'rzp_live_fN6UZTO4YZyRd4';
@@ -135,25 +116,18 @@ const Checkout = () => {
   // Redirect if no design items in cart
   useEffect(() => {
     if (designItems.length === 0) {
-      console.log('🛒 No designs in cart, redirecting to items page');
       navigate('/items');
-      toast({
-        title: "No designs in cart",
-        description: "Please add designs to your cart before checkout.",
-        variant: "destructive",
-      });
+      // toast({
+      //   title: "No designs in cart",
+      //   description: "Please add designs to your cart before checkout.",
+      //   variant: "destructive",
+      // });
     }
   }, [designItems.length, navigate, toast]);
 
   // Pre-fill form with user data
   useEffect(() => {
     if (user) {
-      console.log('👤 Pre-filling form with user data:', {
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        address: user.address
-      });
       setContactForm({
         name: user.name || '',
         email: user.email || '',
@@ -166,31 +140,25 @@ const Checkout = () => {
   // Check authentication on page load
   useEffect(() => {
     if (!user && designItems.length > 0) {
-      console.log('🔐 User not authenticated, showing auth modal');
       setIsAuthModalOpen(true);
     }
   }, [user, designItems.length]);
 
   // Load Razorpay script
   useEffect(() => {
-    console.log('💳 Loading Razorpay script...');
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
-    script.onload = () => console.log('✅ Razorpay script loaded successfully');
-    script.onerror = () => console.error('❌ Failed to load Razorpay script');
     document.body.appendChild(script);
 
     return () => {
       if (document.body.contains(script)) {
         document.body.removeChild(script);
-        console.log('🧹 Razorpay script removed from DOM');
       }
     };
   }, []);
 
   const handleInputChange = (field: string, value: string) => {
-    console.log(`📝 Contact form field updated - ${field}:`, value);
     setContactForm(prev => ({
       ...prev,
       [field]: value
@@ -198,84 +166,31 @@ const Checkout = () => {
   };
 
   const createOrder = async (orderData: OrderData): Promise<CreateOrderResponse> => {
-    console.log('🚀 [CREATE ORDER] Starting order creation process...');
-    console.log('🚀 [CREATE ORDER] ========== REQUEST DATA ==========');
-    console.log('📦 [CREATE ORDER] Order data being sent:', {
-      orderId: orderData.orderId,
-      uid: orderData.uid,
-      email: orderData.email,
-      name: orderData.name,
-      phone: orderData.phone,
-      address: orderData.address,
-      quantity: orderData.quantity,
-      totalAmount: orderData.totalAmount,
-      contactDetails: orderData.contactDetails,
-      designId: orderData.design.id,
-      designName: orderData.design.designName
-    });
-
-    const requestBody = JSON.stringify(orderData);
-    console.log('📡 [CREATE ORDER] API Request Configuration:');
-    console.log('  📍 URL:', `${API_BASE_URL}/orders`);
-    console.log('  📋 Method: POST');
-    console.log('  📄 Content-Type: application/json');
-    console.log('  🎯 ngrok-skip-browser-warning: true');
-    console.log('📦 [CREATE ORDER] Request Body Details:');
-    console.log('  📦 Body length:', requestBody.length, 'characters');
-    console.log('🚀 [CREATE ORDER] ====================================');
-
+    console.log('Creating order with payload:', orderData);
+    
     try {
-      console.log('🌐 [CREATE ORDER] Making API call...');
-      const requestStartTime = Date.now();
-
       const response = await fetch(`${API_BASE_URL}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true',
         },
-        body: requestBody,
+        body: JSON.stringify(orderData),
       });
 
-      const requestEndTime = Date.now();
-      const responseTime = requestEndTime - requestStartTime;
-
-      console.log('📡 [CREATE ORDER] ========== RESPONSE DATA ==========');
-      console.log('📡 [CREATE ORDER] Response received in', responseTime, 'ms');
-      console.log('  📊 Status Code:', response.status);
-      console.log('  📊 Status Text:', response.statusText);
-      console.log('  📊 Response OK:', response.ok);
-
+      console.log('Order creation response status:', response.status);
+      
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ [CREATE ORDER] Order created successfully!');
-        console.log('  📋 Full Response Object:', result);
-        console.log('  🎫 Extracted Order ID:', result.order?.orderId);
-        console.log('  🔑 Extracted Razorpay Order ID:', result.razorpayOrderId);
-        console.log('  💰 Extracted Amount:', result.amount);
-        console.log('  💱 Extracted Currency:', result.currency);
-        console.log('📡 [CREATE ORDER] ===================================');
+        console.log('Order created successfully:', result);
         return result;
       } else {
         const errorText = await response.text();
-        console.error('❌ [CREATE ORDER] Failed to create order!');
-        console.error('❌ [CREATE ORDER] Error Response Details:');
-        console.error('  📊 Status Code:', response.status);
-        console.error('  📊 Status Text:', response.statusText);
-        console.error('  📄 Error Response Body:', errorText);
-        console.error('📡 [CREATE ORDER] ===================================');
+        console.error('Failed to create order:', errorText);
         throw new Error(`Failed to create order: ${errorText}`);
       }
     } catch (error) {
-      console.error('💥 [CREATE ORDER] Exception occurred during API call!');
-      console.error('💥 [CREATE ORDER] Error Details:', error);
-      console.error('💥 [CREATE ORDER] Error Type:', error.constructor.name);
-      console.error('💥 [CREATE ORDER] Error Message:', error.message);
-      if (error instanceof TypeError) {
-        console.error('  🌐 Network error detected - check internet connection and API availability');
-        console.error('  🌐 API URL being called:', `${API_BASE_URL}/orders`);
-      }
-      console.error('📡 [CREATE ORDER] ===================================');
+      console.error('Exception occurred during API call:', error);
       throw error;
     }
   };
@@ -286,54 +201,30 @@ const Checkout = () => {
     razorpayPaymentId: string;
     razorpaySignature: string;
   }) => {
-    console.log('🔍 [VERIFY PAYMENT] Starting payment verification process...');
-    console.log('🔍 [VERIFY PAYMENT] ========== REQUEST DATA ==========');
-    console.log('🔑 [VERIFY PAYMENT] Payment data being sent:', {
-      orderId: paymentData.orderId,
-      razorpayOrderId: paymentData.razorpayOrderId,
-      razorpayPaymentId: paymentData.razorpayPaymentId,
+    console.log('Verifying payment with data:', {
+      ...paymentData,
       razorpaySignature: paymentData.razorpaySignature ? `${paymentData.razorpaySignature.substring(0, 10)}...` : 'null'
     });
 
-    const requestBody = JSON.stringify(paymentData);
-
     try {
-      console.log('🌐 [VERIFY PAYMENT] Making API call...');
-      const requestStartTime = Date.now();
-
       const response = await fetch(`${API_BASE_URL}/orders/verify-payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true',
         },
-        body: requestBody,
+        body: JSON.stringify(paymentData),
       });
 
-      const requestEndTime = Date.now();
-      const responseTime = requestEndTime - requestStartTime;
+      console.log('Payment verification response status:', response.status);
 
-      console.log('📡 [VERIFY PAYMENT] ========== RESPONSE DATA ==========');
-      console.log('📡 [VERIFY PAYMENT] Response received in', responseTime, 'ms');
-      console.log('  📊 Status Code:', response.status);
-      console.log('  📊 Status Text:', response.statusText);
-      console.log('  📊 Response OK:', response.ok);
-
-      // Check for 200 status and treat as success
       if (response.status === 200) {
-        console.log('🎉 [VERIFY PAYMENT] Payment verification successful! (Status 200)');
-        
         let responseData;
         try {
           responseData = await response.json();
-          console.log('📋 [VERIFY PAYMENT] Response body:', responseData);
         } catch (jsonError) {
-          console.log('⚠️ [VERIFY PAYMENT] Could not parse JSON response, but status is 200 - treating as success');
           responseData = { message: 'Payment verified successfully' };
         }
-
-        console.log('✅ [VERIFY PAYMENT] Returning success result');
-        console.log('📡 [VERIFY PAYMENT] ====================================');
         
         return { 
           success: true, 
@@ -342,29 +233,12 @@ const Checkout = () => {
         };
       } else {
         const errorText = await response.text();
-        console.error('❌ [VERIFY PAYMENT] Payment verification failed!');
-        console.error('❌ [VERIFY PAYMENT] Error Response Details:');
-        console.error('  📊 Status Code:', response.status);
-        console.error('  📊 Status Text:', response.statusText);
-        console.error('  📄 Error Response Body:', errorText);
-        console.error('📡 [VERIFY PAYMENT] ====================================');
-        
         return {
           success: false,
           message: `Payment verification failed with status ${response.status}: ${errorText}`
         };
       }
     } catch (error) {
-      console.error('💥 [VERIFY PAYMENT] Exception occurred during API call!');
-      console.error('💥 [VERIFY PAYMENT] Error Details:', error);
-      console.error('💥 [VERIFY PAYMENT] Error Type:', error.constructor.name);
-      console.error('💥 [VERIFY PAYMENT] Error Message:', error.message);
-      if (error instanceof TypeError) {
-        console.error('  🌐 Network error detected - check internet connection and API availability');
-        console.error('  🌐 API URL being called:', `${API_BASE_URL}/orders/verify-payment`);
-      }
-      console.error('📡 [VERIFY PAYMENT] ====================================');
-      
       return {
         success: false,
         message: `Network error: ${error.message}`
@@ -373,32 +247,15 @@ const Checkout = () => {
   };
 
   const initializeRazorpay = (orderData: CreateOrderResponse, contactForm: any) => {
-    console.log('💳 [RAZORPAY] Initializing Razorpay payment gateway...');
-    console.log('💳 [RAZORPAY] Order data for payment:', {
-      razorpayOrderId: orderData.razorpayOrderId,
-      amount: orderData.amount,
-      currency: orderData.currency,
-      orderId: orderData.order.orderId
-    });
-
     const options: RazorpayOptions = {
       key: RAZORPAY_KEY,
       amount: 100, // Fixed amount of 1 INR for testing (amount in paise)
-      // amount: Math.round(orderData.amount * 100), // Actual amount - commented for testing
       currency: orderData.currency,
       name: 'Pattern Bank',
       description: 'Design Purchase',
       order_id: orderData.razorpayOrderId,
       handler: async (response: RazorpayResponse) => {
-        console.log('💰 [RAZORPAY] Payment successful! Razorpay callback triggered');
-        console.log('💰 [RAZORPAY] Payment response details:', {
-          razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_order_id: response.razorpay_order_id,
-          razorpay_signature: response.razorpay_signature ? `${response.razorpay_signature.substring(0, 10)}...` : 'null'
-        });
-
         try {
-          console.log('🔍 [RAZORPAY] Calling payment verification...');
           const verificationResult = await verifyPayment({
             orderId: orderData.order.orderId,
             razorpayOrderId: orderData.razorpayOrderId,
@@ -406,16 +263,9 @@ const Checkout = () => {
             razorpaySignature: response.razorpay_signature,
           });
 
-          console.log('🔍 [RAZORPAY] Verification result:', verificationResult);
-
           if (verificationResult.success) {
-            console.log('🎉 [RAZORPAY] Payment verified successfully!');
-
-            // Clear cart on successful payment
             clearCart();
-            console.log('🧹 [RAZORPAY] Cart cleared after successful payment');
 
-            // Show success modal
             setPaymentResultModal({
               isOpen: true,
               result: {
@@ -431,9 +281,6 @@ const Checkout = () => {
               description: "Your order has been confirmed and payment verified.",
             });
           } else {
-            console.error('❌ [RAZORPAY] Payment verification failed:', verificationResult.message);
-
-            // Show failure modal
             setPaymentResultModal({
               isOpen: true,
               result: {
@@ -444,11 +291,7 @@ const Checkout = () => {
               }
             });
           }
-
         } catch (error) {
-          console.error('💥 [RAZORPAY] Payment verification error:', error);
-
-          // Show error modal
           setPaymentResultModal({
             isOpen: true,
             result: {
@@ -460,7 +303,6 @@ const Checkout = () => {
           });
         } finally {
           setIsProcessing(false);
-          console.log('🏁 [RAZORPAY] Payment flow completed, processing flag reset');
         }
       },
       prefill: {
@@ -474,17 +316,12 @@ const Checkout = () => {
     };
 
     if (!window.Razorpay) {
-      console.error('💳 [RAZORPAY] Razorpay SDK not available on window object');
       throw new Error('Razorpay SDK not loaded');
     }
 
     const razorpay = new window.Razorpay(options);
-    console.log('💳 [RAZORPAY] Razorpay instance created successfully');
 
     razorpay.on('payment.failed', (response: any) => {
-      console.error('💸 [RAZORPAY] Payment failed callback triggered:', response.error);
-
-      // Show failure modal for payment failures
       setPaymentResultModal({
         isOpen: true,
         result: {
@@ -495,24 +332,18 @@ const Checkout = () => {
       });
 
       setIsProcessing(false);
-      console.log('💸 [RAZORPAY] Payment failure handling completed');
     });
 
-    console.log('💳 [RAZORPAY] Opening Razorpay payment dialog...');
     razorpay.open();
   };
 
   const handleCheckout = async () => {
-    console.log('🛒 [CHECKOUT] Starting checkout process...');
-
     if (!user) {
-      console.log('👤 [CHECKOUT] User not authenticated, opening auth modal');
       setIsAuthModalOpen(true);
       return;
     }
 
     if (!contactForm.name || !contactForm.email || !contactForm.phone || !contactForm.address) {
-      console.log('📝 [CHECKOUT] Missing contact form data');
       toast({
         title: "Missing information",
         description: "Please fill in all contact details.",
@@ -522,7 +353,6 @@ const Checkout = () => {
     }
 
     if (!window.Razorpay) {
-      console.error('💳 [CHECKOUT] Razorpay SDK not loaded');
       toast({
         title: "Payment Error",
         description: "Payment system is not available. Please refresh and try again.",
@@ -532,77 +362,41 @@ const Checkout = () => {
     }
 
     setIsProcessing(true);
-    console.log('⏳ [CHECKOUT] Processing checkout for', designItems.length, 'design items');
 
     try {
-      // Process the first design item for simplicity
-      const item = designItems[0];
-      console.log('🎯 [CHECKOUT] Processing design item:', {
-        id: item.id,
-        title: item.title,
-        designId: item.designId
-      });
-
       // Generate unique order ID
       const orderId = `ORD${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      console.log('🎫 [CHECKOUT] Generated order ID:', orderId);
 
-      // Format contact details as string
-      const contactDetailsString = `Preferred contact via WhatsApp: ${contactForm.phone}`;
+      // Prepare designs array with IDs
+      const designs = designItems.map(item => ({
+        id: item.designId || parseInt(item.id.split('_')[1]) || 1
+      }));
+
+      // Calculate total quantity and amount
+      const quantity = designItems.reduce((total, item) => total + item.quantity, 0);
+      const totalAmount = designItems.reduce((total, item) => {
+        const price = item.discountPrice || item.price;
+        return total + (price * item.quantity);
+      }, 0);
 
       const orderData: OrderData = {
-        orderId: orderId,
         uid: user.uid,
         email: user.email || contactForm.email,
         name: user.name || contactForm.name,
         phone: user.phone || contactForm.phone,
         address: user.address || contactForm.address,
-        quantity: item.quantity,
-        totalAmount: 100, // Fixed for testing
-        contactDetails: contactDetailsString,
-        design: {
-          id: item.designId || parseInt(item.id.split('_')[1]) || 1,
-          designName: item.title,
-          category: item.category,
-          subcategory: item.subcategory || "General",
-          price: item.price,
-          discountPrice: item.discountPrice,
-          availableColors: item.availableColors || ["Red", "Blue", "Green", "Black", "White"],
-          imageUrls: [item.image],
-          tags: item.tags || ["vintage", "retro", "classic", "business", "professional"],
-          description: item.description || "A collection of professionally designed vintage-style logos perfect for businesses looking for a classic, timeless brand identity.",
-          fileSizePx: "3000x2000",
-          fileSizeCm: "25.4x16.9",
-          dpi: 300,
-          includedFiles: "AI, EPS, PNG, JPG, PDF",
-          licenseType: "Commercial License",
-          designedBy: item.designedBy || "Professional Designer Name"
-        }
+        designs: designs,
+        quantity: quantity,
+        totalAmount: 100 // Fixed for testing
       };
-
-      console.log('📦 [CHECKOUT] Final order data summary:', {
-        orderId: orderData.orderId,
-        uid: orderData.uid,
-        email: orderData.email,
-        designId: orderData.design.id,
-        designName: orderData.design.designName,
-        quantity: orderData.quantity,
-        totalAmount: orderData.totalAmount
-      });
-
-      console.log('🛒 [CHECKOUT] Calling create order API...');
 
       // Create order
       const createdOrder = await createOrder(orderData);
-
-      console.log('🎉 [CHECKOUT] Order created successfully, initializing payment...');
 
       // Initialize Razorpay payment
       initializeRazorpay(createdOrder, contactForm);
 
     } catch (error) {
-      console.error('💥 [CHECKOUT] Checkout error:', error);
-
       toast({
         title: "Checkout Failed ❌",
         description: "Failed to create order. Please try again.",
@@ -610,7 +404,6 @@ const Checkout = () => {
       });
 
       setIsProcessing(false);
-      console.log('💥 [CHECKOUT] Error handling completed');
     }
   };
 
@@ -619,35 +412,29 @@ const Checkout = () => {
       const price = item.discountPrice || item.price;
       return total + (price * item.quantity);
     }, 0);
-    console.log('💰 [TOTAL] Calculated total amount:', total);
     return total;
   };
 
   const handleAuthSuccess = () => {
-    console.log('✅ [AUTH] Authentication successful');
     setIsAuthModalOpen(false);
   };
 
   const handlePaymentModalClose = () => {
-    console.log('🔒 [MODAL] Closing payment result modal');
     setPaymentResultModal({ isOpen: false, result: null });
   };
 
   const handleNavigateToOrders = () => {
-    console.log('🧾 [NAVIGATION] Navigating to orders page');
     setPaymentResultModal({ isOpen: false, result: null });
     navigate('/orders');
   };
 
   const handleShopAgain = () => {
-    console.log('🛍️ [NAVIGATION] Navigating to home page for shopping');
     setPaymentResultModal({ isOpen: false, result: null });
     navigate('/');
   };
 
   if (designItems.length === 0) {
-    console.log('🛒 [RENDER] No designs in cart, component will not render');
-    return null; // Will redirect in useEffect
+    return null;
   }
 
   const renderPaymentResultModal = () => {
@@ -732,8 +519,6 @@ const Checkout = () => {
       </Dialog>
     );
   };
-
-  console.log('🎨 [RENDER] Rendering checkout component');
 
   return (
     <div className="min-h-screen bg-background">
@@ -828,11 +613,6 @@ const Checkout = () => {
                           <Badge variant="outline" className="text-xs">
                             Digital Design
                           </Badge>
-                          {/* {item.licenseType && (
-                            <Badge variant="outline" className="text-xs">
-                              {item.licenseType}
-                            </Badge>
-                          )} */}
                         </div>
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-2 gap-1">
                           <span className="text-sm">Qty: {item.quantity}</span>

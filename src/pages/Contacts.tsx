@@ -321,7 +321,7 @@ const BecomeSeller = () => {
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
-            Sell Your Designs on <span className="text-primary">Patternbank</span>
+            Sell Your Designs on <span className="text-primary">Aza Arts</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-4xl mx-auto mb-8">
             The leading curated marketplace for surface pattern design. Connect with global buyers, 
@@ -352,7 +352,7 @@ const BecomeSeller = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Star className="h-5 w-5 text-primary" />
-                  Why Designers Choose Patternbank
+                  Why Designers Choose Aza Arts
                 </CardTitle>
                 <CardDescription>
                   Built by designers, for designers

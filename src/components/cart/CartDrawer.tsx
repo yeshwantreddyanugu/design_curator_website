@@ -1,4 +1,3 @@
-// import React from 'react
 import React from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -66,32 +65,56 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onCheckout }) 
                     <div className="flex justify-between gap-2">
                       <div className="min-w-0">
                         <h4 className="font-semibold text-sm truncate">{item.title}</h4>
-                        <p className="text-xs text-muted-foreground">{item.category}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{item.category}</span>
+                          {item.productType && (
+                            <>
+                              <span>•</span>
+                              <span>{item.productType}</span>
+                            </>
+                          )}
+                          {item.subcategory && (
+                            <>
+                              <span>•</span>
+                              <span>{item.subcategory}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 text-destructive hover:text-destructive -mt-1 -mr-1"
+                        className="h-6 w-6 text-destructive hover:text-destructive -mt-1 -mr-1 flex-shrink-0"
                         onClick={() => removeFromCart(item.id)}
+                        title="Remove from cart"
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                     
-                    {(item.selectedSize || item.selectedColor) && (
-                      <div className="flex gap-1 mt-1 flex-wrap">
-                        {item.selectedSize && (
-                          <Badge variant="outline" className="text-xs px-1">
-                            {item.selectedSize}
-                          </Badge>
-                        )}
-                        {item.selectedColor && (
-                          <Badge variant="outline" className="text-xs px-1">
-                            {item.selectedColor}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
+                    {/* Show additional item details */}
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {item.selectedSize && (
+                        <Badge variant="outline" className="text-xs px-1">
+                          {item.selectedSize}
+                        </Badge>
+                      )}
+                      {item.selectedColor && (
+                        <Badge variant="outline" className="text-xs px-1">
+                          {item.selectedColor}
+                        </Badge>
+                      )}
+                      {item.isPremium && (
+                        <Badge className="text-xs px-1 bg-gradient-primary text-primary-foreground">
+                          Premium
+                        </Badge>
+                      )}
+                      {item.designedBy && (
+                        <Badge variant="outline" className="text-xs px-1">
+                          by {item.designedBy}
+                        </Badge>
+                      )}
+                    </div>
                     
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center gap-2">
@@ -99,7 +122,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onCheckout }) 
                           variant="outline"
                           size="sm"
                           className="h-8 w-8 p-0"
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                          disabled={item.quantity <= 1}
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
@@ -127,6 +151,8 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onCheckout }) 
                         )}
                       </div>
                     </div>
+
+
                   </div>
                 </div>
               ))}
@@ -136,18 +162,23 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onCheckout }) 
 
         {cartItems.length > 0 && (
           <div className="border-t pt-4 sticky bottom-0 bg-background">
-            <div className="flex justify-between items-center mb-4">
-              <span className="font-medium">Subtotal</span>
-              <span className="font-semibold">
-                ${getTotalAmount().toFixed(2)}
-              </span>
+            <div className="space-y-2 mb-4">
+              <div className="flex justify-between items-center text-sm">
+                <span>Items ({getTotalItems()})</span>
+                <span>{cartItems.length} unique products</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Subtotal</span>
+                <span className="font-semibold">
+                  ${getTotalAmount().toFixed(2)}
+                </span>
+              </div>
             </div>
             <Button 
               className="w-full" 
               size="lg"
               onClick={handleCheckout}
             >
-              {/* <CreditCard className="h-4 w-4 mr-2" /> */}
               {user ? 'Proceed to Checkout' : 'Login to Checkout'}
             </Button>
           </div>

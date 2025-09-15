@@ -63,7 +63,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToSignup }) =>
       <CardHeader className="text-center">
         <CardTitle className="font-display text-2xl">Welcome Back</CardTitle>
         <CardDescription>
-          Sign in to your PatternBank account
+          Sign in to your Aza Arts account
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -8,7 +8,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <h3 className="font-display text-2xl font-bold text-primary mb-4">
-              patternbank
+              Aza Arts
             </h3>
             <p className="text-background/80 leading-relaxed mb-6 max-w-md">
               The leading destination for exclusively licensed print and pattern designs 
@@ -48,7 +48,7 @@ const Footer = () => {
         {/* Bottom */}
         <div className="border-t border-background/20 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-background/60 text-sm">
-            © 2024 PatternBank. All rights reserved.
+            © 2025 Aza Arts. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-background/60 hover:text-primary transition-smooth text-sm">Privacy Policy</a>

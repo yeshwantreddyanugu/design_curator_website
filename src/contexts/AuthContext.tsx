@@ -174,7 +174,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           localStorage.setItem('patternbank_user', JSON.stringify(mergedUser));
           toast({
             title: "Account created",
-            description: `Welcome to PatternBank, ${mergedUser.name}!`,
+            description: `Welcome to Aza Arts, ${mergedUser.name}!`,
           });
           return true;
         } else if (response.status === 400) {
@@ -194,7 +194,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('patternbank_user', JSON.stringify(appUser));
       toast({
         title: "Account created",
-        description: `Welcome to PatternBank, ${appUser.name}!`,
+        description: `Welcome to Aza Arts, ${appUser.name}!`,
       });
       return true;
     } catch (error) {
@@ -254,7 +254,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             localStorage.setItem('patternbank_user', JSON.stringify(mergedUser));
             toast({
               title: "Account created",
-              description: `Welcome to PatternBank, ${mergedUser.name}!`,
+              description: `Welcome to Aza Arts, ${mergedUser.name}!`,
             });
             return true;
           }

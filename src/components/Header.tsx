@@ -48,9 +48,9 @@ const Header = () => {
             <div className="flex items-center">
               <button
                 onClick={() => navigate('/')}
-                className="font-display text-xl md:text-2xl font-bold text-primary hover:text-primary/80 transition-smooth"
+                className="font-display text-xl md:text-3xl font-bold text-primary hover:text-primary/80 transition-smooth"
               >
-                patternbank
+                Aza Arts
               </button>
             </div>
 
