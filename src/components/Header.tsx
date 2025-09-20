@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, User, Heart, ChevronDown, LogOut, Menu, X } from "lucide-react";
+import { Search, User, Heart, ChevronDown, LogOut, Menu, X, LayoutGrid, Package, PenTool, Star, Layers, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -55,46 +55,65 @@ const Header = () => {
             </div>
 
             {/* Navigation - Hidden on mobile */}
+
             <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
               <div className="relative">
                 <button
                   className="text-foreground hover:text-primary transition-smooth font-medium flex items-center gap-1"
-                  onMouseEnter={() => setIsDesignNavOpen(true)}
+                  onClick={() => setIsDesignNavOpen((prev) => !prev)}
                 >
+                  <LayoutGrid className="h-4 w-4" />
                   Designs
                   <ChevronDown className="h-4 w-4" />
                 </button>
               </div>
+
               <button
-                className="text-foreground hover:text-primary transition-smooth font-medium"
+                className="text-foreground hover:text-primary transition-smooth font-medium flex items-center gap-1"
+                onClick={() => navigate('/allProductItems')}
+              >
+                <Package className="h-4 w-4" />
+                Products
+              </button>
+
+              <button
+                className="text-foreground hover:text-primary transition-smooth font-medium flex items-center gap-1"
                 onClick={() => setIsCustomFormOpen(true)}
               >
+                <PenTool className="h-4 w-4" />
                 Custom Design
               </button>
+
               <button
-                className="text-foreground hover:text-primary transition-smooth font-medium"
+                className="text-foreground hover:text-primary transition-smooth font-medium flex items-center gap-1"
                 onClick={() => navigate('/items?premium=true')}
               >
+                <Star className="h-4 w-4" />
                 Premium
               </button>
+
               <button
-                className="text-foreground hover:text-primary transition-smooth font-medium"
+                className="text-foreground hover:text-primary transition-smooth font-medium flex items-center gap-1"
                 onClick={() => navigate('/items')}
               >
+                <Layers className="h-4 w-4" />
                 All Designs
               </button>
+
               <button
-                className="text-foreground hover:text-primary transition-smooth font-medium"
+                className="text-foreground hover:text-primary transition-smooth font-medium flex items-center gap-1"
                 onClick={() => navigate('/seller-application')}
               >
-                contacts
+                <Store className="h-4 w-4" />
+                Become a Seller
               </button>
             </nav>
+
 
             {/* Search and Actions */}
             <div className="flex items-center space-x-2 md:space-x-3">
               {/* Search - Hidden on mobile */}
-              <form onSubmit={handleSearch} className="relative hidden xl:block">
+              {/* <form onSubmit={handleSearch} className="relative hidden xl:block">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   type="search"
@@ -103,7 +122,7 @@ const Header = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 w-48 xl:w-64 bg-muted/50 border-border focus:border-primary"
                 />
-              </form>
+              </form> */}
 
               {/* Mobile search button */}
               <Button
@@ -159,7 +178,7 @@ const Header = () => {
               </Button>
 
               <CartIcon onClick={() => setIsCartOpen(true)} />
-              
+
               {/* Mobile Menu Button - Positioned after Cart */}
               <Button
                 variant="ghost"
@@ -185,72 +204,91 @@ const Header = () => {
           <div className="lg:hidden bg-background border-t absolute top-full right-0 w-64 shadow-lg rounded-bl-md">
             <div className="px-4 py-4">
               <div className="flex flex-col space-y-4">
+                {/* Designs Dropdown */}
                 <div className="relative">
                   <button
-                    className="text-foreground hover:text-primary transition-smooth font-medium flex items-center gap-1 w-full justify-between"
+                    className="text-foreground hover:text-primary transition-smooth font-medium flex items-center gap-2 w-full justify-between"
                     onClick={() => setIsDesignNavOpen(!isDesignNavOpen)}
                   >
-                    Designs
-                    <ChevronDown className={`h-4 w-4 transition-transform ${isDesignNavOpen ? 'rotate-180' : ''}`} />
+                    <div className="flex items-center gap-2">
+                      <LayoutGrid className="h-4 w-4" />
+                      Designs
+                    </div>
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${isDesignNavOpen ? "rotate-180" : ""
+                        }`}
+                    />
                   </button>
                   {isDesignNavOpen && (
-                    <div className="mt-2 pl-4">
+                    <div className="mt-2 pl-6">
                       <button
                         className="block w-full text-left py-2 text-foreground hover:text-primary"
-                        onClick={() => handleNavigate('clothing', 'dresses')}
+                        onClick={() => handleNavigate("clothing", "dresses")}
                       >
                         Dresses
                       </button>
                       <button
                         className="block w-full text-left py-2 text-foreground hover:text-primary"
-                        onClick={() => handleNavigate('clothing', 'tops')}
+                        onClick={() => handleNavigate("clothing", "tops")}
                       >
                         Tops
                       </button>
                       <button
                         className="block w-full text-left py-2 text-foreground hover:text-primary"
-                        onClick={() => handleNavigate('home', 'decor')}
+                        onClick={() => handleNavigate("home", "decor")}
                       >
                         Home Decor
                       </button>
                     </div>
                   )}
                 </div>
+
+                {/* Custom Design */}
                 <button
-                  className="text-foreground hover:text-primary transition-smooth font-medium text-left"
+                  className="text-foreground hover:text-primary transition-smooth font-medium flex items-center gap-2 text-left"
                   onClick={() => {
                     setIsCustomFormOpen(true);
                     setIsMobileMenuOpen(false);
                   }}
                 >
+                  <PenTool className="h-4 w-4" />
                   Custom Design
                 </button>
+
+                {/* Premium */}
                 <button
-                  className="text-foreground hover:text-primary transition-smooth font-medium text-left"
+                  className="text-foreground hover:text-primary transition-smooth font-medium flex items-center gap-2 text-left"
                   onClick={() => {
-                    navigate('/items?premium=true');
+                    navigate("/items?premium=true");
                     setIsMobileMenuOpen(false);
                   }}
                 >
+                  <Star className="h-4 w-4" />
                   Premium
                 </button>
+
+                {/* All Designs */}
                 <button
-                  className="text-foreground hover:text-primary transition-smooth font-medium text-left"
+                  className="text-foreground hover:text-primary transition-smooth font-medium flex items-center gap-2 text-left"
                   onClick={() => {
-                    navigate('/items');
+                    navigate("/items");
                     setIsMobileMenuOpen(false);
                   }}
                 >
+                  <Layers className="h-4 w-4" />
                   All Designs
                 </button>
+
+                {/* Become a Seller */}
                 <button
-                  className="text-foreground hover:text-primary transition-smooth font-medium text-left"
+                  className="text-foreground hover:text-primary transition-smooth font-medium flex items-center gap-2 text-left"
                   onClick={() => {
-                    navigate('/seller-application');
+                    navigate("/seller-application");
                     setIsMobileMenuOpen(false);
                   }}
                 >
-                  Contacts
+                  <Store className="h-4 w-4" />
+                  Become a Seller
                 </button>
 
                 {/* Mobile Search */}
@@ -276,7 +314,7 @@ const Header = () => {
                       <button
                         className="text-foreground hover:text-primary text-left"
                         onClick={() => {
-                          navigate('/orders');
+                          navigate("/orders");
                           setIsMobileMenuOpen(false);
                         }}
                       >
@@ -285,7 +323,7 @@ const Header = () => {
                       <button
                         className="text-foreground hover:text-primary text-left"
                         onClick={() => {
-                          navigate('/profile');
+                          navigate("/profile");
                           setIsMobileMenuOpen(false);
                         }}
                       >
@@ -317,7 +355,7 @@ const Header = () => {
               </div>
             </div>
           </div>
-        )} 
+        )}
       </header>
 
       {/* Custom Design Form Modal */}

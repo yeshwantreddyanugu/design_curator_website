@@ -12,20 +12,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import DownloadButton from "@/components/DownloadButton";
-import { 
-  useDesigns, 
-  useDesignsByCategory, 
-  useDesignsBySubcategory, 
-  useTrendingDesigns, 
-  useNewArrivalDesigns, 
+import {
+  useDesigns,
+  useDesignsByCategory,
+  useDesignsBySubcategory,
+  useTrendingDesigns,
+  useNewArrivalDesigns,
   usePremiumDesigns,
-  useSearchDesigns 
+  useSearchDesigns
 } from "@/hooks/useDesigns";
 
 const Items = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  
+
   // URL params
   const category = searchParams.get('category');
   const subcategory = searchParams.get('subcategory');
@@ -33,16 +33,51 @@ const Items = () => {
   const isPremium = searchParams.get('premium') === 'true';
   const isTrending = searchParams.get('trending') === 'true';
   const isNewArrival = searchParams.get('new') === 'true';
-  
+  const colorsParam = searchParams.get('colors');
+
   // Local state
   const [searchTerm, setSearchTerm] = useState(search || '');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(0);
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  
-  // API params
+  const [selectedColors, setSelectedColors] = useState<string[]>(
+    colorsParam ? colorsParam.split(',') : []
+  );
+
+  // Categories data
+  const categories = [
+    'Geometric',
+    'Floral',
+    'Animals/Birds',
+    'World',
+    'Conversationals',
+    'Abstract',
+    'Checks',
+    'Stripes',
+    'Paisleys',
+    'Tropical',
+    'Traditional',
+    'Placements',
+    'Texture',
+    'Camouflage',
+    'Animal Skins',
+    'Nature',
+    'Border',
+    '2 & 3 Colour'
+  ];
+
+  // Update selectedColors when URL changes
+  useEffect(() => {
+    setSelectedColors(colorsParam ? colorsParam.split(',') : []);
+  }, [colorsParam]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(0);
+  }, [subcategory, search, isPremium, isTrending, isNewArrival, colorsParam, sortBy, sortDirection]);
+
+  // API params - don't include colors in API query, we'll filter client-side
   const apiParams = {
     page,
     size: 20,
@@ -60,39 +95,113 @@ const Items = () => {
     designsQuery = useTrendingDesigns(apiParams);
   } else if (isNewArrival) {
     designsQuery = useNewArrivalDesigns(apiParams);
-  } else if (subcategory) {
-    designsQuery = useDesignsBySubcategory(subcategory, apiParams);
-  } else if (category) {
-    designsQuery = useDesignsByCategory(category, apiParams);
   } else {
+    // Always use useDesigns for subcategory filtering since we're doing client-side filtering
     designsQuery = useDesigns(apiParams);
   }
 
-  const { data, isLoading, error } = designsQuery;
+  const { data: rawData, isLoading, error } = designsQuery;
+
+  // Filter data client-side for colors and subcategory matching
+  const data = rawData ? {
+    ...rawData,
+    content: rawData.content.filter((design: any) => {
+      // Color filtering
+      let passesColorFilter = true;
+      if (selectedColors.length > 0) {
+        if (design.availableColors && Array.isArray(design.availableColors)) {
+          passesColorFilter = design.availableColors.some((color: string) =>
+            selectedColors.includes(color)
+          );
+        } else {
+          passesColorFilter = false;
+        }
+      }
+
+      // Subcategory filtering - check if selected subcategory matches any word in category or subcategory
+      let passesSubcategoryFilter = true;
+      if (subcategory && subcategory !== 'all') {
+        const designCategory = (design.category || '').toLowerCase();
+        const designSubcategory = (design.subcategory || '').toLowerCase();
+        const selectedSubcategoryLower = subcategory.toLowerCase();
+        
+        // Check if the selected subcategory matches any word in category or subcategory
+        const categoryWords = designCategory.split(/[\s,]+/).filter(word => word.length > 0);
+        const subcategoryWords = designSubcategory.split(/[\s,]+/).filter(word => word.length > 0);
+        const allWords = [...categoryWords, ...subcategoryWords];
+        
+        passesSubcategoryFilter = allWords.some(word => 
+          word.includes(selectedSubcategoryLower) || 
+          selectedSubcategoryLower.includes(word)
+        );
+      }
+
+      return passesColorFilter && passesSubcategoryFilter;
+    })
+  } : rawData;
 
   // Handle search
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      setSearchParams({ search: searchTerm.trim() });
-      setPage(0);
+      const params = new URLSearchParams(searchParams);
+      params.set('search', searchTerm.trim());
+      // Remove other conflicting filters when searching
+      params.delete('category');
+      params.delete('subcategory');
+      params.delete('premium');
+      params.delete('trending');
+      params.delete('new');
+      setSearchParams(params);
     }
   };
 
   // Handle filter changes
   const updateFilters = (newFilters: Record<string, string | undefined>) => {
     const params = new URLSearchParams(searchParams);
-    
+
     Object.entries(newFilters).forEach(([key, value]) => {
-      if (value) {
+      if (value && value.trim() !== '') {
         params.set(key, value);
       } else {
         params.delete(key);
       }
     });
-    
+
     setSearchParams(params);
-    setPage(0);
+  };
+
+  // Handle category selection
+  const handleCategoryChange = (selectedCategory: string) => {
+    if (selectedCategory === 'all') {
+      updateFilters({ 
+        subcategory: undefined
+      });
+    } else {
+      // Set as subcategory filter for backend compatibility
+      updateFilters({ 
+        subcategory: selectedCategory,
+        search: undefined,
+        premium: undefined,
+        trending: undefined,
+        new: undefined
+      });
+    }
+  };
+
+  // Handle color filter changes
+  const handleColorChange = (color: string, checked: boolean) => {
+    let newColors: string[];
+    if (checked) {
+      newColors = [...selectedColors, color];
+    } else {
+      newColors = selectedColors.filter(c => c !== color);
+    }
+
+    setSelectedColors(newColors);
+    updateFilters({
+      colors: newColors.length > 0 ? newColors.join(',') : undefined
+    });
   };
 
   // Clear all filters
@@ -106,12 +215,14 @@ const Items = () => {
   // Get active filters for display
   const getActiveFilters = () => {
     const filters = [];
-    if (category) filters.push({ label: `Category: ${category}`, key: 'category' });
-    if (subcategory) filters.push({ label: `Subcategory: ${subcategory}`, key: 'subcategory' });
+    if (subcategory) filters.push({ label: `Category: ${subcategory}`, key: 'subcategory' });
     if (isPremium) filters.push({ label: 'Premium', key: 'premium' });
     if (isTrending) filters.push({ label: 'Trending', key: 'trending' });
     if (isNewArrival) filters.push({ label: 'New Arrivals', key: 'new' });
     if (search) filters.push({ label: `Search: ${search}`, key: 'search' });
+    if (selectedColors.length > 0) {
+      filters.push({ label: `Colors: ${selectedColors.join(', ')}`, key: 'colors' });
+    }
     return filters;
   };
 
@@ -121,6 +232,32 @@ const Items = () => {
     params.delete(key);
     setSearchParams(params);
     if (key === 'search') setSearchTerm('');
+    if (key === 'colors') setSelectedColors([]);
+  };
+
+  // Available colors based on your data structure
+  const availableColors = [
+    'Red', 'Blue', 'Green', 'Yellow', 'Purple', 'Orange',
+    'Pink', 'Black', 'White', 'Gray', 'Brown', 'Navy'
+  ];
+
+  // Color mapping for better visual representation
+  const getColorStyle = (color: string) => {
+    const colorMap: Record<string, string> = {
+      'Red': '#ef4444',
+      'Blue': '#3b82f6',
+      'Green': '#22c55e',
+      'Yellow': '#eab308',
+      'Purple': '#a855f7',
+      'Orange': '#f97316',
+      'Pink': '#ec4899',
+      'Black': '#000000',
+      'White': '#ffffff',
+      'Gray': '#6b7280',
+      'Brown': '#a3530a',
+      'Navy': '#1e3a8a'
+    };
+    return colorMap[color] || color.toLowerCase();
   };
 
   const FilterPanel = () => (
@@ -149,37 +286,59 @@ const Items = () => {
       <Separator />
 
       <div>
+        <h3 className="font-semibold mb-3">Categories</h3>
+        <Select 
+          value={subcategory || 'all'} 
+          onValueChange={handleCategoryChange}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Separator />
+
+      <div>
         <h3 className="font-semibold mb-3">Quick Filters</h3>
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="premium" 
+            <Checkbox
+              id="premium"
               checked={isPremium}
-              onCheckedChange={(checked) => 
+              onCheckedChange={(checked) =>
                 updateFilters({ premium: checked ? 'true' : undefined })
               }
             />
-            <label htmlFor="premium" className="text-sm">Premium Designs</label>
+            <label htmlFor="premium" className="text-sm cursor-pointer">Premium Designs</label>
           </div>
           <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="trending" 
+            <Checkbox
+              id="trending"
               checked={isTrending}
-              onCheckedChange={(checked) => 
+              onCheckedChange={(checked) =>
                 updateFilters({ trending: checked ? 'true' : undefined })
               }
             />
-            <label htmlFor="trending" className="text-sm">Trending</label>
+            <label htmlFor="trending" className="text-sm cursor-pointer">Trending</label>
           </div>
           <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="new" 
+            <Checkbox
+              id="new"
               checked={isNewArrival}
-              onCheckedChange={(checked) => 
+              onCheckedChange={(checked) =>
                 updateFilters({ new: checked ? 'true' : undefined })
               }
             />
-            <label htmlFor="new" className="text-sm">New Arrivals</label>
+            <label htmlFor="new" className="text-sm cursor-pointer">New Arrivals</label>
           </div>
         </div>
       </div>
@@ -189,87 +348,107 @@ const Items = () => {
       <div>
         <h3 className="font-semibold mb-3">Colors</h3>
         <div className="grid grid-cols-4 gap-2">
-          {['Red', 'Blue', 'Green', 'Yellow', 'Purple', 'Orange', 'Pink', 'Black', 'White', 'Gray', 'Brown', 'Navy'].map((color) => (
+          {availableColors.map((color) => (
             <button
               key={color}
-              className={`h-8 w-8 rounded-full border-2 transition-smooth ${
-                selectedColors.includes(color) 
-                  ? 'border-primary scale-110' 
-                  : 'border-muted hover:border-primary/50'
-              }`}
-              style={{ backgroundColor: color.toLowerCase() === 'white' ? '#ffffff' : color.toLowerCase() }}
-              onClick={() => {
-                const newColors = selectedColors.includes(color)
-                  ? selectedColors.filter(c => c !== color)
-                  : [...selectedColors, color];
-                setSelectedColors(newColors);
-              }}
+              className={`h-8 w-8 rounded-full border-2 transition-all duration-200 hover:scale-105 ${selectedColors.includes(color)
+                ? 'border-primary ring-2 ring-primary/20 scale-110'
+                : 'border-gray-300 hover:border-primary/50'
+                } ${color === 'White' ? 'shadow-md' : ''}`}
+              style={{ backgroundColor: getColorStyle(color) }}
+              onClick={() => handleColorChange(color, !selectedColors.includes(color))}
               title={color}
-            />
+              aria-label={`Filter by ${color} color`}
+            >
+              {selectedColors.includes(color) && (
+                <div className="w-full h-full rounded-full flex items-center justify-center">
+                  <div className={`w-2 h-2 rounded-full ${color === 'White' || color === 'Yellow' ? 'bg-gray-600' : 'bg-white'
+                    }`} />
+                </div>
+              )}
+            </button>
           ))}
         </div>
+        {selectedColors.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setSelectedColors([]);
+              updateFilters({ colors: undefined });
+            }}
+            className="mt-2 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Clear colors
+          </Button>
+        )}
       </div>
     </div>
   );
 
   const DesignCard = ({ design }: { design: any }) => (
-    <Card 
-      className="group pattern-hover border-0 shadow-soft bg-card cursor-pointer"
+    <Card
+      className="group pattern-hover border-0 shadow-soft bg-card cursor-pointer transition-all duration-300 hover:shadow-lg"
       onClick={() => navigate(`/design/${design.id}`)}
     >
       <CardContent className="p-0">
-        <div className="relative overflow-hidden rounded-lg">
+        <div className="relative overflow-hidden rounded-t-lg">
           <img
             src={design.imageUrls?.[0] || '/placeholder.svg'}
             alt={design.designName}
-            className={`w-full object-cover transition-smooth group-hover:scale-110 ${
-              viewMode === 'grid' ? 'h-64' : 'h-32'
-            }`}
+            className={`w-full object-cover transition-all duration-300 group-hover:scale-110 ${viewMode === 'grid' ? 'h-64' : 'h-32'
+              }`}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-smooth" />
-          {/* <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-smooth">
-            <DownloadButton 
-              designId={design.id} 
-              designName={design.designName}
-              variant="ghost"
-              size="sm"
-              className="text-white border-white/30 hover:bg-white/20"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div> */}
-          {design.isPremium && (
-            <Badge className="absolute top-2 left-2 bg-gradient-primary text-primary-foreground">
-              Premium
-            </Badge>
-          )}
-          {design.isNewArrival && (
-            <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground">
-              New
-            </Badge>
-          )}
         </div>
+
         <div className={`p-4 ${viewMode === 'list' ? 'flex items-center justify-between' : ''}`}>
           <div className={viewMode === 'list' ? 'flex-1' : ''}>
-            <h3 className="font-semibold text-foreground group-hover:text-primary transition-smooth">
+            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
               {design.designName}
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              {design.category} • {design.subcategory}
+              {design.category} {design.subcategory && design.subcategory !== 'n' && `• ${design.subcategory}`}
             </p>
             <div className="flex items-center gap-2 mt-2">
               <span className="font-semibold text-primary">
-                ${design.discountPrice || design.price}
+                ₹{design.discountPrice > 0 ? Math.round(design.price - (design.price * design.discountPrice / 100)) : Math.round(design.price)}
               </span>
-              {design.discountPrice && (
-                <span className="text-sm text-muted-foreground line-through">
-                  ${design.price}
-                </span>
+              {design.discountPrice > 0 && (
+                <>
+                  <span className="text-sm text-muted-foreground line-through">
+                    ₹{Math.round(design.price)}
+                  </span>
+                  <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-md">
+                    {design.discountPrice}% OFF
+                  </span>
+                </>
               )}
             </div>
+
+            {/* File specifications */}
+            <div className="flex items-start justify-start gap-1 mt-2 text-xs font-medium text-muted-foreground">
+              <span>{design.fileSizePx}px</span>
+              <span>/</span>
+              <span>{design.fileSizeCm}cm</span>
+              <span>/</span>
+              <span>{design.dpi}dpi</span>
+            </div>
+
+            {/* Tags */}
+            {/* {design.tags && design.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {design.tags.slice(0, 2).map((tag: string, index: number) => (
+                  <Badge key={index} variant="outline" className="text-xs">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )} */}
           </div>
+
           {viewMode === 'list' && (
-            <DownloadButton 
-              designId={design.id} 
+            <DownloadButton
+              designId={design.id}
               designName={design.designName}
               size="sm"
               onClick={(e) => e.stopPropagation()}
@@ -283,14 +462,14 @@ const Items = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="font-display text-4xl font-bold text-foreground mb-4">
             Design Collection
           </h1>
-          
+
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="relative max-w-md mb-4">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -308,23 +487,19 @@ const Items = () => {
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className="text-sm text-muted-foreground">Active filters:</span>
               {getActiveFilters().map((filter) => (
-                <Badge 
-                  key={filter.key} 
-                  variant="secondary" 
-                  className="flex items-center gap-1"
+                <Badge
+                  key={filter.key}
+                  variant="secondary"
+                  className="flex items-center gap-1 cursor-pointer hover:bg-destructive/10"
+                  onClick={() => removeFilter(filter.key)}
                 >
                   {filter.label}
-                  <button 
-                    onClick={() => removeFilter(filter.key)}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
+                  <X className="h-3 w-3" />
                 </Badge>
               ))}
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={clearFilters}
                 className="text-muted-foreground hover:text-foreground"
               >
@@ -359,6 +534,11 @@ const Items = () => {
                     <Button variant="outline" size="sm" className="lg:hidden">
                       <SlidersHorizontal className="h-4 w-4 mr-2" />
                       Filters
+                      {getActiveFilters().length > 0 && (
+                        <Badge className="ml-2 px-1 py-0 text-xs">
+                          {getActiveFilters().length}
+                        </Badge>
+                      )}
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="left" className="w-80">
@@ -373,7 +553,10 @@ const Items = () => {
 
                 {data && (
                   <span className="text-sm text-muted-foreground">
-                    {data.totalElements} designs found
+                    {selectedColors.length > 0 && data.content.length !== rawData?.totalElements
+                      ? `${data.content.length} of ${rawData?.totalElements} designs found`
+                      : `${rawData?.totalElements || data.content.length} designs found`
+                    }
                   </span>
                 )}
               </div>
@@ -399,14 +582,19 @@ const Items = () => {
 
             {/* Loading State */}
             {isLoading && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className={
+                viewMode === 'grid'
+                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                  : "space-y-4"
+              }>
                 {Array.from({ length: 8 }).map((_, i) => (
                   <Card key={i} className="animate-pulse">
                     <CardContent className="p-0">
-                      <div className="h-64 bg-muted rounded-lg" />
+                      <div className={`bg-muted rounded-t-lg ${viewMode === 'grid' ? 'h-64' : 'h-32'}`} />
                       <div className="p-4 space-y-2">
                         <div className="h-4 bg-muted rounded" />
                         <div className="h-3 bg-muted rounded w-2/3" />
+                        <div className="h-3 bg-muted rounded w-1/2" />
                       </div>
                     </CardContent>
                   </Card>
@@ -417,7 +605,10 @@ const Items = () => {
             {/* Error State */}
             {error && (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">Error loading designs. Please try again.</p>
+                <p className="text-muted-foreground mb-4">Error loading designs. Please try again.</p>
+                <Button variant="outline" onClick={() => window.location.reload()}>
+                  Retry
+                </Button>
               </div>
             )}
 
@@ -425,7 +616,7 @@ const Items = () => {
             {data && data.content && (
               <>
                 <div className={
-                  viewMode === 'grid' 
+                  viewMode === 'grid'
                     ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                     : "space-y-4"
                 }>
@@ -434,23 +625,26 @@ const Items = () => {
                   ))}
                 </div>
 
-                {/* Pagination */}
-                {data.totalPages > 1 && (
-                  <div className="flex justify-center mt-8 gap-2">
+                {/* Pagination - only show if we have original pagination or if we're filtering colors */}
+                {((rawData?.totalPages > 1) || (selectedColors.length > 0 && data.content.length > 20)) && (
+                  <div className="flex justify-center items-center mt-8 gap-2">
                     <Button
                       variant="outline"
-                      disabled={data.first || isLoading}
-                      onClick={() => setPage(page - 1)}
+                      disabled={rawData?.first || isLoading}
+                      onClick={() => setPage(Math.max(0, page - 1))}
                     >
                       Previous
                     </Button>
+
+                    {/* Page info */}
                     <span className="flex items-center px-4 text-sm text-muted-foreground">
-                      Page {data.pageable.pageNumber + 1} of {data.totalPages}
+                      Page {(rawData?.pageable?.pageNumber || 0) + 1} of {rawData?.totalPages || 1}
                     </span>
+
                     <Button
                       variant="outline"
-                      disabled={data.last || isLoading}
-                      onClick={() => setPage(page + 1)}
+                      disabled={rawData?.last || isLoading}
+                      onClick={() => setPage(Math.min((rawData?.totalPages || 1) - 1, page + 1))}
                     >
                       Next
                     </Button>
@@ -462,9 +656,15 @@ const Items = () => {
             {/* Empty State */}
             {data && data.content.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">No designs found matching your criteria.</p>
-                <Button variant="outline" onClick={clearFilters} className="mt-4">
-                  Clear filters
+                <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
+                  <Search className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">No designs found</h3>
+                <p className="text-muted-foreground mb-4">
+                  Try adjusting your filters or search terms to find what you're looking for.
+                </p>
+                <Button variant="outline" onClick={clearFilters}>
+                  Clear all filters
                 </Button>
               </div>
             )}

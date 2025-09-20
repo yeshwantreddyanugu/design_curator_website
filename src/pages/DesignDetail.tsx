@@ -40,7 +40,7 @@ const DesignDetail = () => {
   const handleAddToCart = () => {
     console.log("Add to cart clicked for design:", design);
     console.log("Current user authentication status:", !!user);
-    
+
     if (!user) {
       console.log("User not authenticated, opening login modal");
       setIsAuthModalOpen(true);
@@ -74,8 +74,8 @@ const DesignDetail = () => {
         type: 'design',
         productId: design.id,
         title: design.designName,
-        price: parseFloat(String(design.discountPrice || design.price)),
-        discountPrice: design.discountPrice ? parseFloat(String(design.price)) : undefined,
+        price: parseFloat(String(design.price)),
+        discountPrice: design.discountPrice ,
         image: design.imageUrls?.[0] || '/placeholder.svg',
         category: design.category,
         productType: 'DESIGN',
@@ -154,12 +154,12 @@ const DesignDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Images Section */}
           <div className="space-y-4">
-            <div 
+            <div
               className="aspect-square overflow-hidden rounded-lg border cursor-pointer select-none"
               onClick={() => handleImageClick(0)}
               onContextMenu={(e) => { e.preventDefault(); return false; }}
@@ -172,20 +172,20 @@ const DesignDetail = () => {
                 onContextMenu={(e) => { e.preventDefault(); return false; }}
                 onDragStart={(e) => { e.preventDefault(); return false; }}
                 draggable={false}
-                style={{ 
-                  userSelect: 'none', 
+                style={{
+                  userSelect: 'none',
                   WebkitUserSelect: 'none',
                   WebkitTouchCallout: 'none'
                 } as React.CSSProperties}
               />
             </div>
-            
+
             {/* Additional Images */}
             {design.imageUrls && design.imageUrls.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
                 {design.imageUrls.slice(1, 5).map((url, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className="aspect-square overflow-hidden rounded-lg border cursor-pointer select-none"
                     onClick={() => handleImageClick(index + 1)}
                     onContextMenu={(e) => { e.preventDefault(); return false; }}
@@ -198,8 +198,8 @@ const DesignDetail = () => {
                       onContextMenu={(e) => { e.preventDefault(); return false; }}
                       onDragStart={(e) => { e.preventDefault(); return false; }}
                       draggable={false}
-                      style={{ 
-                        userSelect: 'none', 
+                      style={{
+                        userSelect: 'none',
                         WebkitUserSelect: 'none',
                         WebkitTouchCallout: 'none'
                       } as React.CSSProperties}
@@ -224,11 +224,11 @@ const DesignDetail = () => {
                   <Badge className="bg-accent text-accent-foreground">New Arrival</Badge>
                 )}
               </div>
-              
+
               <h1 className="font-display text-3xl font-bold text-foreground mb-2">
                 {design.designName}
               </h1>
-              
+
               <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                 <span>{design.category}</span>
                 <span>•</span>
@@ -243,17 +243,22 @@ const DesignDetail = () => {
 
               <div className="flex items-center gap-4 mb-6">
                 <span className="text-2xl font-bold text-primary">
-                  ${design.discountPrice || design.price}
+                  ${design.discountPrice && design.discountPrice > 0
+                    ? Math.round(design.price - (design.price * design.discountPrice) / 100)
+                    : Math.round(design.price)
+                  }
                 </span>
-                {design.discountPrice && (
+                {design.discountPrice && design.discountPrice > 0 && (
                   <span className="text-lg text-muted-foreground line-through">
-                    ${design.price}
+                    ${Math.round(design.price)}
                   </span>
                 )}
               </div>
 
-              <Button 
-                size="lg" 
+
+
+              <Button
+                size="lg"
                 className="w-full"
                 onClick={handleAddToCart}
               >
@@ -279,40 +284,33 @@ const DesignDetail = () => {
                   <FileImage className="h-4 w-4" />
                   Design Specifications
                 </h3>
-                
+
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  {design.fileSizePx && (
-                    <div>
-                      <span className="text-muted-foreground">Size (pixels):</span>
-                      <p className="font-medium">{design.fileSizePx}</p>
+                  {/* Combined size display in the requested format */}
+                  {(design.fileSizePx || design.fileSizeCm || design.dpi) && (
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Size:</div>
+                      <div className="font-medium">
+                        {design.fileSizePx && `${design.fileSizePx} px`}
+                        {design.fileSizePx && design.fileSizeCm && " / "}
+                        {design.fileSizeCm && `${design.fileSizeCm} cm`}
+                        {(design.fileSizePx || design.fileSizeCm) && design.dpi && " / "}
+                        {design.dpi && `${design.dpi} dpi`}
+                      </div>
                     </div>
                   )}
-                  
-                  {design.fileSizeCm && (
-                    <div>
-                      <span className="text-muted-foreground">Size (cm):</span>
-                      <p className="font-medium">{design.fileSizeCm}</p>
-                    </div>
-                  )}
-                  
-                  {design.dpi && (
-                    <div>
-                      <span className="text-muted-foreground">DPI:</span>
-                      <p className="font-medium">{design.dpi}</p>
-                    </div>
-                  )}
-                  
+
                   {design.includedFiles && (
-                    <div>
-                      <span className="text-muted-foreground">Included Files:</span>
-                      <p className="font-medium">{design.includedFiles}</p>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">Included Files:</div>
+                      <div className="font-medium">{design.includedFiles}</div>
                     </div>
                   )}
-                  
+
                   {design.licenseType && (
-                    <div>
-                      <span className="text-muted-foreground">License:</span>
-                      <p className="font-medium">{design.licenseType}</p>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground">License:</div>
+                      <div className="font-medium">{design.licenseType}</div>
                     </div>
                   )}
                 </div>

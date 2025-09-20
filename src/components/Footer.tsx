@@ -28,8 +28,9 @@ const Footer = () => {
             <ul className="space-y-2">
               <li><a href="#" className="text-background/80 hover:text-primary transition-smooth">About Us</a></li>
               <li><a href="#" className="text-background/80 hover:text-primary transition-smooth">Licensing</a></li>
-              <li><a href="#" className="text-background/80 hover:text-primary transition-smooth">Become a Designer</a></li>
-              <li><a href="#" className="text-background/80 hover:text-primary transition-smooth">Help Center</a></li>
+              <li><a href="/contactUs" className="text-background/80 hover:text-primary transition-smooth">Become a Designer</a></li>
+              <li><a href="/contactUs" className="text-background/80 hover:text-primary transition-smooth">Help Center</a></li>
+              <li><a href="/contactUs" className="text-background/80 hover:text-primary transition-smooth">Contact Us</a></li>
             </ul>
           </div>
 
@@ -37,10 +38,10 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold text-background mb-4">Categories</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-background/80 hover:text-primary transition-smooth">Tropical</a></li>
-              <li><a href="#" className="text-background/80 hover:text-primary transition-smooth">Geometric</a></li>
-              <li><a href="#" className="text-background/80 hover:text-primary transition-smooth">Floral</a></li>
-              <li><a href="#" className="text-background/80 hover:text-primary transition-smooth">Abstract</a></li>
+              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth">Tropical</a></li>
+              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth">Geometric</a></li>
+              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth">Floral</a></li>
+              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth">Abstract</a></li>
             </ul>
           </div>
         </div>

@@ -2,7 +2,6 @@ import React from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
@@ -26,6 +25,28 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onCheckout }) 
       navigate('/checkout');
     }
     onClose();
+  };
+
+  // Helper function to calculate final price with discount
+  const calculateFinalPrice = (price: number, discountPrice?: number) => {
+    console.log('CartDrawer: calculateFinalPrice input - price:', price, 'discountPrice:', discountPrice);
+    
+    if (discountPrice && discountPrice > 0) {
+      const discountAmount = price * discountPrice / 100;
+      const finalPrice = price - discountAmount;
+      
+      console.log('CartDrawer: Discount calculation:');
+      console.log('  - Original price:', price);
+      console.log('  - Discount percentage:', discountPrice);
+      console.log('  - Discount amount:', discountAmount);
+      console.log('  - Final price (before rounding):', finalPrice);
+      console.log('  - Final price (rounded up):', Math.ceil(finalPrice));
+      
+      return finalPrice;
+    }
+    
+    console.log('CartDrawer: No discount applied, returning original price:', price);
+    return price;
   };
 
   return (
@@ -53,109 +74,134 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onCheckout }) 
             </div>
           ) : (
             <div className="space-y-3">
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex gap-3 p-3 border rounded-lg">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-16 h-16 object-cover rounded-md flex-shrink-0"
-                  />
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between gap-2">
-                      <div className="min-w-0">
-                        <h4 className="font-semibold text-sm truncate">{item.title}</h4>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{item.category}</span>
-                          {item.productType && (
-                            <>
-                              <span>•</span>
-                              <span>{item.productType}</span>
-                            </>
-                          )}
-                          {item.subcategory && (
-                            <>
-                              <span>•</span>
-                              <span>{item.subcategory}</span>
-                            </>
-                          )}
+              {cartItems.map((item) => {
+                console.log('CartDrawer: Processing item:', item);
+                console.log('CartDrawer: Item price details:', {
+                  title: item.title,
+                  price: item.price,
+                  discountPrice: item.discountPrice,
+                  quantity: item.quantity
+                });
+
+                const finalPrice = calculateFinalPrice(item.price, item.discountPrice);
+                const itemTotal = finalPrice * item.quantity;
+                const originalTotal = item.price * item.quantity;
+                const hasDiscount = item.discountPrice && item.discountPrice > 0;
+                
+                console.log('CartDrawer: Calculated values:', {
+                  finalPrice,
+                  itemTotal,
+                  originalTotal,
+                  hasDiscount,
+                  finalPriceRoundedUp: Math.ceil(finalPrice),
+                  itemTotalRoundedUp: Math.ceil(itemTotal),
+                  originalTotalRoundedUp: Math.ceil(originalTotal)
+                });
+                
+                return (
+                  <div key={item.id} className="flex gap-3 p-3 border rounded-lg">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                    />
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between gap-2">
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-sm truncate">{item.title}</h4>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>{item.category}</span>
+                            {item.productType && (
+                              <>
+                                <span>•</span>
+                                <span>{item.productType}</span>
+                              </>
+                            )}
+                            {item.subcategory && (
+                              <>
+                                <span>•</span>
+                                <span>{item.subcategory}</span>
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-destructive hover:text-destructive -mt-1 -mr-1 flex-shrink-0"
-                        onClick={() => removeFromCart(item.id)}
-                        title="Remove from cart"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    
-                    {/* Show additional item details */}
-                    <div className="flex gap-1 mt-1 flex-wrap">
-                      {item.selectedSize && (
-                        <Badge variant="outline" className="text-xs px-1">
-                          {item.selectedSize}
-                        </Badge>
-                      )}
-                      {item.selectedColor && (
-                        <Badge variant="outline" className="text-xs px-1">
-                          {item.selectedColor}
-                        </Badge>
-                      )}
-                      {item.isPremium && (
-                        <Badge className="text-xs px-1 bg-gradient-primary text-primary-foreground">
-                          Premium
-                        </Badge>
-                      )}
-                      {item.designedBy && (
-                        <Badge variant="outline" className="text-xs px-1">
-                          by {item.designedBy}
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center gap-2">
                         <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                          disabled={item.quantity <= 1}
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-destructive hover:text-destructive -mt-1 -mr-1 flex-shrink-0"
+                          onClick={() => removeFromCart(item.id)}
+                          title="Remove from cart"
                         >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="text-sm font-medium w-8 text-center">
-                          {item.quantity}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        >
-                          <Plus className="h-3 w-3" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                       
-                      <div className="text-right">
-                        <p className="font-semibold text-sm">
-                          ${((item.discountPrice || item.price) * item.quantity).toFixed(2)}
-                        </p>
-                        {item.discountPrice && (
-                          <p className="text-xs text-muted-foreground line-through">
-                            ${(item.price * item.quantity).toFixed(2)}
-                          </p>
+                      {/* Show additional item details */}
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        {item.selectedSize && (
+                          <Badge variant="outline" className="text-xs px-1">
+                            {item.selectedSize}
+                          </Badge>
+                        )}
+                        {item.selectedColor && (
+                          <Badge variant="outline" className="text-xs px-1">
+                            {item.selectedColor}
+                          </Badge>
+                        )}
+                        {item.isPremium && (
+                          <Badge className="text-xs px-1 bg-gradient-primary text-primary-foreground">
+                            Premium
+                          </Badge>
+                        )}
+                        {item.designedBy && (
+                          <Badge variant="outline" className="text-xs px-1">
+                            by {item.designedBy}
+                          </Badge>
                         )}
                       </div>
+                      
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                            disabled={item.quantity <= 1}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="text-sm font-medium w-8 text-center">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        
+                        <div className="text-right">
+                          <div className="flex flex-col items-end">
+                            <p className="font-semibold text-sm">
+                              ₹{Math.round(itemTotal)}
+                            </p>
+                            {hasDiscount && (
+                              <p className="text-xs text-muted-foreground line-through">
+                                ₹{Math.round(originalTotal)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-
-
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -170,7 +216,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onCheckout }) 
               <div className="flex justify-between items-center">
                 <span className="font-medium">Subtotal</span>
                 <span className="font-semibold">
-                  ${getTotalAmount().toFixed(2)}
+                  ₹{Math.round(getTotalAmount())}
                 </span>
               </div>
             </div>

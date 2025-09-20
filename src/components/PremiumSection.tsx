@@ -26,16 +26,27 @@ const PremiumSection = () => {
   };
 
   const premiumDesigns =
-    premiumData?.content?.slice(0, 4).map((design) => ({
-      id: design.id,
-      title: design.designName,
-      category: design.category,
-      subcategory: design.subcategory,
-      price: `$${design.discountPrice || design.price}`,
-      originalPrice: design.discountPrice ? `$${design.price}` : null,
-      image: design.imageUrls?.[0] || "/placeholder.svg",
-      isPremium: design.isPremium,
-    })) || [];
+    premiumData?.content?.slice(0, 4).map((design) => {
+      const discount = Number(design.discountPrice) || 0;
+      const finalPrice = discount
+        ? Number(design.price) - (Number(design.price) * discount) / 100
+        : Number(design.price);
+
+      return {
+        id: design.id,
+        title: design.designName,
+        category: design.category,
+        subcategory: design.subcategory,
+        price: Number(design.price),
+        discountPercent: discount,
+        finalPrice,
+        image: design.imageUrls?.[0] || "/placeholder.svg",
+        isPremium: design.isPremium,
+        fileSizePx: design.fileSizePx,
+        fileSizeCm: design.fileSizeCm,
+        dpi: design.dpi,
+      };
+    }) || [];
 
   if (isLoading) {
     return (
@@ -95,7 +106,7 @@ const PremiumSection = () => {
                     className="group overflow-hidden hover:shadow-elegant transition-all duration-300 cursor-pointer"
                   >
                     <CardContent className="p-0">
-                      <div className="relative overflow-hidden aspect-square">
+                      <div className="relative overflow-hidden h-40">
                         <img
                           src={design.image}
                           alt={design.title}
@@ -107,9 +118,16 @@ const PremiumSection = () => {
                           {design.title}
                         </h4>
                         <div className="flex items-center justify-between">
-                          <p className="text-primary font-semibold text-sm">
-                            {design.price}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-primary font-semibold text-sm">
+                              ₹{Math.round(design.finalPrice)}
+                            </p>
+                            {design.discountPercent > 0 && (
+                              <p className="text-xs text-muted-foreground line-through">
+                                ₹{design.price.toFixed(2)}
+                              </p>
+                            )}
+                          </div>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -119,6 +137,19 @@ const PremiumSection = () => {
                           >
                             {design.subcategory}
                           </button>
+                        </div>
+                        <div className="flex items-start justify-start gap-1 mt-3">
+                          <p className="text-xs font-semibold text-foreground">
+                            {design.fileSizePx} px
+                          </p>
+                          <span>/</span>
+                          <p className="text-xs font-semibold text-foreground">
+                            {design.fileSizeCm} cm
+                          </p>
+                          <span>/</span>
+                          <p className="text-xs font-semibold text-foreground">
+                            {design.dpi} dpi
+                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -151,7 +182,6 @@ const PremiumSection = () => {
         </div>
       </div>
     </section>
-
   );
 };
 

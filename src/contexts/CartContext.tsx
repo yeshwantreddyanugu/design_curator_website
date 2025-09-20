@@ -8,7 +8,7 @@ export interface CartItem {
   productId?: number;
   title: string;
   price: number;
-  discountPrice?: number;
+  discountPrice?: number; // This is a percentage discount (e.g., 10 for 10% off)
   image: string;
   quantity: number;
   selectedSize?: string;
@@ -54,7 +54,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const savedCart = localStorage.getItem('patternbank_cart');
     if (savedCart) {
       try {
-        setCartItems(JSON.parse(savedCart));
+        const loadedCart = JSON.parse(savedCart);
+        console.log('CartContext: Loaded cart from localStorage:', loadedCart);
+        setCartItems(loadedCart);
       } catch (error) {
         console.error('Error loading cart from localStorage:', error);
         localStorage.removeItem('patternbank_cart');
@@ -64,6 +66,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
+    console.log('CartContext: Saving cart to localStorage:', cartItems);
     localStorage.setItem('patternbank_cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
@@ -82,8 +85,31 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Helper function to calculate final price with discount
+  const calculateFinalPrice = (price: number, discountPrice?: number) => {
+    console.log('CartContext: calculateFinalPrice input - price:', price, 'discountPrice:', discountPrice);
+    
+    if (discountPrice && discountPrice > 0) {
+      const discountAmount = price * discountPrice / 100;
+      const finalPrice = price - discountAmount;
+      
+      console.log('CartContext: Discount calculation:');
+      console.log('  - Original price:', price);
+      console.log('  - Discount percentage:', discountPrice);
+      console.log('  - Discount amount:', discountAmount);
+      console.log('  - Final price (before rounding):', finalPrice);
+      console.log('  - Final price (rounded):', Math.round(finalPrice));
+      
+      return finalPrice;
+    }
+    
+    console.log('CartContext: No discount applied, returning original price:', price);
+    return price;
+  };
+
   const addToCart = (item: Omit<CartItem, 'id' | 'quantity'>, quantity: number = 1) => {
     console.log("CartContext: Adding item to cart:", item);
+    console.log("CartContext: Item price details - price:", item.price, "discountPrice:", item.discountPrice);
     
     // For designs, we always create a new cart item (no quantity increase for existing items)
     // For products, we might want to check for existing items with same size/color
@@ -96,7 +122,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         quantity,
       };
       
-      console.log("CartContext: Adding new design item with ID:", itemId);
+      console.log("CartContext: Adding new design item:", newItem);
+      console.log("CartContext: New item price details - price:", newItem.price, "discountPrice:", newItem.discountPrice);
       
       setCartItems(prevItems => {
         const updatedItems = [...prevItems, newItem];
@@ -155,6 +182,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           quantity,
         };
         
+        console.log("CartContext: Adding new product item:", newItem);
+        
         toast({
           title: "Added to cart",
           description: `${item.title} has been added to your cart.`,
@@ -171,6 +200,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const updatedItems = prevItems.filter(item => item.id !== itemId);
       
       if (removedItem) {
+        console.log("CartContext: Removing item from cart:", removedItem);
         toast({
           title: "Removed from cart",
           description: `${removedItem.title} has been removed from your cart.`,
@@ -190,6 +220,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setCartItems(prevItems => {
       return prevItems.map(item => {
         if (item.id === itemId) {
+          console.log("CartContext: Updating quantity for item:", item, "new quantity:", quantity);
+          
           // Check stock limit
           if (item.stockQuantity && quantity > item.stockQuantity) {
             toast({
@@ -207,6 +239,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const clearCart = () => {
+    console.log("CartContext: Clearing cart");
     setCartItems([]);
     toast({
       title: "Cart cleared",
@@ -215,14 +248,21 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const getTotalItems = () => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0);
+    const total = cartItems.reduce((total, item) => total + item.quantity, 0);
+    console.log("CartContext: Total items in cart:", total);
+    return total;
   };
 
   const getTotalAmount = () => {
-    return cartItems.reduce((total, item) => {
-      const price = item.discountPrice || item.price;
-      return total + (price * item.quantity);
+    const total = cartItems.reduce((total, item) => {
+      const finalPrice = calculateFinalPrice(item.price, item.discountPrice);
+      const itemTotal = finalPrice * item.quantity;
+      console.log(`CartContext: Item ${item.title} - finalPrice: ${finalPrice}, quantity: ${item.quantity}, itemTotal: ${itemTotal}`);
+      return total + itemTotal;
     }, 0);
+    
+    console.log("CartContext: Total cart amount:", total);
+    return total;
   };
 
   return (

@@ -34,7 +34,7 @@ const CustomDesignForm = ({ isOpen, onClose }: CustomDesignFormProps) => {
   const handleUsageChange = (usage: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      usage: checked 
+      usage: checked
         ? [...prev.usage, usage]
         : prev.usage.filter(u => u !== usage)
     }));
@@ -43,9 +43,9 @@ const CustomDesignForm = ({ isOpen, onClose }: CustomDesignFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     console.log("📤 Form submission started:", formData);
-    
+
     try {
       // Prepare data for backend according to the required format
       const requestData = {
@@ -94,10 +94,10 @@ Budget: ${formData.budget}`,
 
       // Close the form
       onClose();
-      
+
     } catch (error) {
       console.error("❌ Error submitting form:", error);
-      
+
       toast({
         title: "Submission Failed",
         description: "There was an error submitting your request. Please try again.",
@@ -117,7 +117,7 @@ Budget: ${formData.budget}`,
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Personal Information */}
@@ -131,7 +131,7 @@ Budget: ${formData.budget}`,
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email*</Label>
                 <Input
@@ -142,7 +142,7 @@ Budget: ${formData.budget}`,
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone</Label>
                 <Input
@@ -151,7 +151,7 @@ Budget: ${formData.budget}`,
                   onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="company">Company/Brand</Label>
                 <Input
@@ -180,7 +180,7 @@ Budget: ${formData.budget}`,
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="colorScheme">Preferred Color Scheme</Label>
                 <Select value={formData.colorScheme} onValueChange={(value) => setFormData(prev => ({ ...prev, colorScheme: value }))}>
@@ -188,12 +188,12 @@ Budget: ${formData.budget}`,
                     <SelectValue placeholder="Select color scheme" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="tropical">Tropical Colors</SelectItem>
-                    <SelectItem value="monochromatic">Monochromatic</SelectItem>
+                    {/* <SelectItem value="tropical">Tropical Colors</SelectItem>
                     <SelectItem value="pastel">Pastel Tones</SelectItem>
                     <SelectItem value="bold-bright">Bold & Bright</SelectItem>
                     <SelectItem value="earth-tones">Earth Tones</SelectItem>
-                    <SelectItem value="custom">Custom Palette</SelectItem>
+                    <SelectItem value="custom">Custom Palette</SelectItem> */}
+                    <SelectItem value="monochromatic">Monochromatic</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -239,7 +239,7 @@ Budget: ${formData.budget}`,
                   onChange={(e) => setFormData(prev => ({ ...prev, deadline: e.target.value }))}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="budget">Budget Range</Label>
                 <Select value={formData.budget} onValueChange={(value) => setFormData(prev => ({ ...prev, budget: value }))}>
@@ -247,10 +247,10 @@ Budget: ${formData.budget}`,
                     <SelectValue placeholder="Select budget range" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="500-1000">$500 - $1,000</SelectItem>
-                    <SelectItem value="1000-2500">$1,000 - $2,500</SelectItem>
-                    <SelectItem value="2500-5000">$2,500 - $5,000</SelectItem>
-                    <SelectItem value="5000+">$5,000+</SelectItem>
+                    <SelectItem value="500-1000">₹500 - ₹1,000</SelectItem>
+                    <SelectItem value="1000-2500">₹1,000 - ₹2,500</SelectItem>
+                    <SelectItem value="2500-5000">₹2,500 - ₹5,000</SelectItem>
+                    <SelectItem value="5000+">₹5,000+</SelectItem>
                     <SelectItem value="discuss">Let's Discuss</SelectItem>
                   </SelectContent>
                 </Select>
@@ -259,16 +259,16 @@ Budget: ${formData.budget}`,
 
             {/* Submit */}
             <div className="flex gap-3 pt-4">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="gradient-warm text-white flex-1"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Submitting..." : "Submit Request"}
               </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={onClose}
                 disabled={isSubmitting}
               >

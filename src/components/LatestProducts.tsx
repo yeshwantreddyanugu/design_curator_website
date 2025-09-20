@@ -35,8 +35,8 @@ const LatestProducts = () => {
       type: 'product',
       productId: product.id,
       title: product.title,
-      price: parseFloat(product.price.replace('From $', '')),
-      discountPrice: product.originalPrice ? parseFloat(product.originalPrice.replace('$', '')) : undefined,
+      price: parseFloat(product.price.replace('From ₹', '')),
+      discountPrice: product.originalPrice ? parseFloat(product.originalPrice.replace('₹', '')) : undefined,
       image: product.image,
       category: product.category,
       productType: product.productType,
@@ -117,8 +117,8 @@ const LatestProducts = () => {
       title: product.productName,
       category: product.category,
       productType: product.productType,
-      price: product.discountPrice ? `$${product.discountPrice}` : `$${product.price}`,
-      originalPrice: product.discountPrice ? `$${product.price}` : null,
+      price: product.discountPrice ? `₹${product.discountPrice}` : `₹${product.price}`,
+      originalPrice: product.discountPrice ? `₹${product.price}` : null,
       image: product.imageUrls?.[0] || patternGrid,
       stockQuantity: product.stockQuantity,
       availableSizes: product.availableSizes || [],
@@ -129,7 +129,7 @@ const LatestProducts = () => {
         title: "Tropical Print T-Shirts",
         category: "Apparel",
         productType: "CLOTHES",
-        price: "From $29.99",
+        price: "From ₹29.99",
         image: patternGrid,
         stockQuantity: 15
       },
@@ -137,7 +137,7 @@ const LatestProducts = () => {
         title: "Designer Sneakers",
         category: "Footwear",
         productType: "SHOES",
-        price: "From $89.99",
+        price: "From ₹89.99",
         image: patternGrid,
         stockQuantity: 8
       },
@@ -145,7 +145,7 @@ const LatestProducts = () => {
         title: "Pattern Dresses",
         category: "Womenswear",
         productType: "CLOTHES",
-        price: "From $59.99",
+        price: "From ₹59.99",
         image: patternGrid,
         stockQuantity: 12
       },
@@ -153,7 +153,7 @@ const LatestProducts = () => {
         title: "Casual Joggers",
         category: "Activewear",
         productType: "CLOTHES",
-        price: "From $39.99",
+        price: "From ₹39.99",
         image: patternGrid,
         stockQuantity: 20
       },
@@ -161,7 +161,7 @@ const LatestProducts = () => {
         title: "Print Accessories",
         category: "Accessories",
         productType: "CLOTHES",
-        price: "From $19.99",
+        price: "From ₹19.99",
         image: patternGrid,
         stockQuantity: 25
       },
@@ -169,7 +169,7 @@ const LatestProducts = () => {
         title: "Designer Jackets",
         category: "Outerwear",
         productType: "CLOTHES",
-        price: "From $129.99",
+        price: "From ₹129.99",
         image: patternGrid,
         stockQuantity: 5
       }
