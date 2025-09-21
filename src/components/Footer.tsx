@@ -37,7 +37,7 @@ const Footer = () => {
               <li>
                 <button 
                   className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
-                  onClick={() => handleNavigation('/about')}
+                  onClick={() => handleNavigation('/aboutUs')}
                 >
                   About Us
                 </button>
@@ -45,7 +45,7 @@ const Footer = () => {
               <li>
                 <button 
                   className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
-                  onClick={() => handleNavigation('/licensing')}
+                  onClick={() => handleNavigation('/privacy')}
                 >
                   Licensing
                 </button>
@@ -61,7 +61,7 @@ const Footer = () => {
               <li>
                 <button 
                   className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
-                  onClick={() => handleNavigation('/help')}
+                  onClick={() => handleNavigation('/contactUs')}
                 >
                   Help Center
                 </button>
@@ -131,13 +131,13 @@ const Footer = () => {
             </button>
             <button 
               className="text-background/60 hover:text-primary transition-smooth text-sm"
-              onClick={() => handleNavigation('/terms')}
+              onClick={() => handleNavigation('/privacy')}
             >
               Terms of Service
             </button>
             <button 
               className="text-background/60 hover:text-primary transition-smooth text-sm"
-              onClick={() => handleNavigation('/cookies')}
+              onClick={() => handleNavigation('/privacy')}
             >
               Cookie Policy
             </button>

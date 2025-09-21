@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, Mail, Phone, MessageCircle, CheckCircle } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -92,122 +92,125 @@ const ContactUs: React.FC = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 pt-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         {/* Back Button */}
-        <div className="container mx-auto max-w-7xl">
+        <div className="container mx-auto max-w-4xl px-4 pt-4">
           <button
             onClick={handleBack}
-            className="flex items-center text-gray-600 hover:text-gray-800 mb-6 transition-colors"
+            className="flex items-center text-gray-600 hover:text-gray-800 mb-4 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back
           </button>
         </div>
 
-        <div className="container mx-auto max-w-7xl">
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-            <div className="grid lg:grid-cols-2 min-h-[600px]">
-              {/* Left Column - Contact Information */}
-              <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-12 text-white">
-                <h1 className="text-4xl font-bold mb-6">Contact Us</h1>
-                <p className="text-slate-300 mb-12 leading-relaxed">
-                  We'd love to hear from you. Whether you have questions,
-                  need support, or want to learn how AzaArts can help,
-                  feel free to reach out by email, phone,
-                  or by filling out the form below.
-                </p>
+        <div className="container mx-auto max-w-4xl px-4 pb-8">
+          {/* Header Section */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Contact Us</h1>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              We'd love to hear from you. Whether you have questions, need support, 
+              or want to learn how AzaArts can help, feel free to reach out.
+            </p>
+          </div>
 
-                <div className="space-y-6">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-4">📧</span>
-                    <span className="text-slate-300">info@azaarts.com</span>
-                  </div>
-
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-4">📞</span>
-                    <span className="text-slate-300">+91 93724 47544</span>
-                  </div>
-
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-4">🔗</span>
-                    <span className="text-slate-300">Customer Support</span>
-                  </div>
-                </div>
-
-                <div className="mt-16 space-y-8">
-                  <div>
-                    <h3 className="text-xl font-semibold mb-3">Customer Support</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">
-                      Our dedicated support team is available 24/7
-                      to assist you with any questions, concerns,
-                      or technical issues you may have.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-xl font-semibold mb-3">Feedback & Suggestions</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">
-                      Your feedback matters to us. At AzaArts,
-                      we're constantly striving to improve, and
-                      your input plays a vital role in shaping
-                      the future of our services.
-                    </p>
-                  </div>
-                </div>
+          {/* Contact Info Cards - Mobile Friendly */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="w-6 h-6 text-blue-600" />
               </div>
+              <h3 className="font-semibold text-gray-800 mb-2">Email Us</h3>
+              <p className="text-gray-600 text-sm">info@azaarts.com</p>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Phone className="w-6 h-6 text-green-600" />
+              </div>
+              <h3 className="font-semibold text-gray-800 mb-2">Call Us</h3>
+              <p className="text-gray-600 text-sm">+91 93724 47544</p>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="w-6 h-6 text-purple-600" />
+              </div>
+              <h3 className="font-semibold text-gray-800 mb-2">Support</h3>
+              <p className="text-gray-600 text-sm">24/7 Available</p>
+            </div>
+          </div>
 
-              {/* Right Column - Contact Form */}
-              <div className="p-12">
-                <div className="max-w-md mx-auto">
-                  <h2 className="text-3xl font-bold text-gray-800 mb-2">Get in Touch</h2>
+          {/* Main Form Card */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="p-6 md:p-8">
+              {submitted ? (
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle className="w-10 h-10 text-green-600" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-4">Thank you!</h3>
                   <p className="text-gray-600 mb-8">
-                    You can reach us anytime by completing the form. Share a
-                    few details, and we'll get back to you as quickly as possible.
+                    Your message has been sent successfully. We'll get back to you soon.
                   </p>
+                  <button
+                    onClick={() => setSubmitted(false)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+                  >
+                    Send Another Message
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Get in Touch</h2>
+                    <p className="text-gray-600">
+                      Share a few details, and we'll get back to you as quickly as possible.
+                    </p>
+                  </div>
 
-                  {submitted ? (
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-sm">✓</span>
-                        </div>
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Name Fields - Stack on Mobile */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          First Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={firstName}
+                          onChange={(e) => {
+                            console.log("First name changed:", e.target.value);
+                            setFirstName(e.target.value);
+                          }}
+                          className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                          placeholder="Enter your first name"
+                          required
+                        />
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-800 mb-2">Thank you!</h3>
-                      <p className="text-gray-600">Your message has been sent successfully.</p>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Last Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={lastName}
+                          onChange={(e) => {
+                            console.log("Last name changed:", e.target.value);
+                            setLastName(e.target.value);
+                          }}
+                          className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                          placeholder="Enter your last name"
+                          required
+                        />
+                      </div>
                     </div>
-                  ) : (
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                      {/* Name Fields */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <input
-                            type="text"
-                            value={firstName}
-                            onChange={(e) => {
-                              console.log("First name changed:", e.target.value);
-                              setFirstName(e.target.value);
-                            }}
-                            className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            placeholder="First name"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="text"
-                            value={lastName}
-                            onChange={(e) => {
-                              console.log("Last name changed:", e.target.value);
-                              setLastName(e.target.value);
-                            }}
-                            className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            placeholder="Last name"
-                            required
-                          />
-                        </div>
-                      </div>
 
-                      {/* Email */}
+                    {/* Email */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address *
+                      </label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
@@ -217,19 +220,20 @@ const ContactUs: React.FC = () => {
                             console.log("Email changed:", e.target.value);
                             setEmail(e.target.value);
                           }}
-                          className="w-full border border-gray-200 rounded-lg pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                          placeholder="Your email"
+                          className="w-full border border-gray-300 rounded-lg pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                          placeholder="Enter your email address"
                           required
                         />
                       </div>
+                    </div>
 
-                      {/* Phone */}
+                    {/* Phone */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Phone Number
+                      </label>
                       <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center">
-                          <select className="bg-transparent border-none outline-none text-sm text-gray-600">
-                            <option>+91</option>
-                          </select>
-                        </div>
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           type="tel"
                           value={phone}
@@ -237,58 +241,90 @@ const ContactUs: React.FC = () => {
                             console.log("Phone changed:", e.target.value);
                             setPhone(e.target.value);
                           }}
-                          className="w-full border border-gray-200 rounded-lg pl-20 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                          placeholder="Phone number"
+                          className="w-full border border-gray-300 rounded-lg pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                          placeholder="+91 XXXXX XXXXX"
                         />
                       </div>
+                    </div>
 
-                      {/* Message */}
-                      <div>
-                        <textarea
-                          value={message}
-                          onChange={(e) => {
-                            console.log("Message changed:", e.target.value);
-                            setMessage(e.target.value);
-                          }}
-                          rows={4}
-                          className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-                          placeholder="How can we help?"
-                          required
-                          maxLength={500}
-                        />
-                        <div className="text-right text-sm text-gray-400 mt-1">
-                          {message.length}/500
+                    {/* Message */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Message *
+                      </label>
+                      <textarea
+                        value={message}
+                        onChange={(e) => {
+                          console.log("Message changed:", e.target.value);
+                          setMessage(e.target.value);
+                        }}
+                        rows={5}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                        placeholder="How can we help you? Please describe your inquiry..."
+                        required
+                        maxLength={500}
+                      />
+                      <div className="text-right text-sm text-gray-400 mt-1">
+                        {message.length}/500
+                      </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className={`w-full font-medium py-4 px-6 rounded-lg transition-all duration-200 ${
+                        isLoading
+                          ? 'bg-gray-400 cursor-not-allowed text-white'
+                          : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                      }`}
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                          Sending...
                         </div>
-                      </div>
-
-                      {/* Submit Button */}
-                      <button
-                        type="submit"
-                        disabled={isLoading}
-                        className={`w-full font-medium py-3 px-6 rounded-lg transition-colors shadow-lg hover:shadow-xl ${isLoading
-                            ? 'bg-gray-400 cursor-not-allowed text-white'
-                            : 'bg-blue-600 hover:bg-blue-700 text-white'
-                          }`}
-                      >
-                        {isLoading ? 'Sending...' : 'Submit'}
-                      </button>
-
-                      {/* Terms */}
-                      <p className="text-sm text-gray-500 text-center">
-                        By contacting us, you agree to our{" "}
-                        <a href="#" className="text-blue-600 hover:underline">
-                          Terms of service
-                        </a>{" "}
-                        and{" "}
-                        <a href="#" className="text-blue-600 hover:underline">
-                          Privacy Policy
-                        </a>
-                      </p>
-                    </form>
-                  )}
+                      ) : (
+                        'Send Message'
+                      )}
+                    </button>
+                  </form>
                 </div>
-              </div>
+              )}
             </div>
+          </div>
+
+          {/* Additional Info Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <h3 className="text-xl font-semibold text-gray-800 mb-3">Customer Support</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Our dedicated support team is available 24/7 to assist you with any questions, 
+                concerns, or technical issues you may have.
+              </p>
+            </div>
+            
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <h3 className="text-xl font-semibold text-gray-800 mb-3">Feedback & Suggestions</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Your feedback matters to us. We're constantly striving to improve, and your 
+                input plays a vital role in shaping the future of our services.
+              </p>
+            </div>
+          </div>
+
+          {/* Terms */}
+          <div className="text-center mt-8">
+            <p className="text-sm text-gray-500">
+              By contacting us, you agree to our{" "}
+              <a href="#" className="text-blue-600 hover:underline">
+                Terms of service
+              </a>{" "}
+              and{" "}
+              <a href="#" className="text-blue-600 hover:underline">
+                Privacy Policy
+              </a>
+            </p>
           </div>
         </div>
       </div>

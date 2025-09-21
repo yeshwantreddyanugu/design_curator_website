@@ -37,6 +37,15 @@ const Header = () => {
     }
   };
 
+  // Made in India component for reusability
+  const MadeInIndiaBadge = ({ className = "" }) => (
+    <div className={`text-xs font-bold ${className}`}>
+      <span className="text-orange-500">Made</span>{' '}
+      <span className="text-blue-500">in</span>{' '}
+      <span className="text-green-500">India</span>
+    </div>
+  );
+
   return (
     <>
       <header className="bg-background border-b shadow-soft sticky top-0 z-50"
@@ -46,16 +55,20 @@ const Header = () => {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center">
-              <button
-                onClick={() => navigate('/')}
-                className="font-display text-xl md:text-3xl font-bold text-primary hover:text-primary/80 transition-smooth"
-              >
-                Aza Arts
-              </button>
+              <div className="flex flex-col items-start">
+                {/* Made in India badge - Mobile only, above logo */}
+                <MadeInIndiaBadge className="lg:hidden mb-1" />
+                
+                <button
+                  onClick={() => navigate('/')}
+                  className="font-display text-xl md:text-3xl font-bold text-primary hover:text-primary/80 transition-smooth"
+                >
+                  Aza Arts
+                </button>
+              </div>
             </div>
 
             {/* Navigation - Hidden on mobile */}
-
             <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
               <div className="relative">
                 <button
@@ -109,21 +122,8 @@ const Header = () => {
               </button>
             </nav>
 
-
             {/* Search and Actions */}
             <div className="flex items-center space-x-2 md:space-x-3">
-              {/* Search - Hidden on mobile */}
-              {/* <form onSubmit={handleSearch} className="relative hidden xl:block">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  type="search"
-                  placeholder="Search patterns..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-48 xl:w-64 bg-muted/50 border-border focus:border-primary"
-                />
-              </form> */}
-
               {/* Mobile search button */}
               <Button
                 variant="ghost"
@@ -177,7 +177,13 @@ const Header = () => {
                 <Heart className="h-5 w-5" />
               </Button>
 
-              <CartIcon onClick={() => setIsCartOpen(true)} />
+              {/* Cart and Made in India badge container for desktop */}
+              <div className="flex items-center space-x-3">
+                <CartIcon onClick={() => setIsCartOpen(true)} />
+                
+                {/* Made in India badge - Desktop only, right of cart */}
+                <MadeInIndiaBadge className="hidden lg:block" />
+              </div>
 
               {/* Mobile Menu Button - Positioned after Cart */}
               <Button

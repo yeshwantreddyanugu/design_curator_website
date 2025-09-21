@@ -167,7 +167,7 @@ const Checkout = () => {
 
   const createOrder = async (orderData: OrderData): Promise<CreateOrderResponse> => {
     console.log('Creating order with payload:', orderData);
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/orders`, {
         method: 'POST',
@@ -179,7 +179,7 @@ const Checkout = () => {
       });
 
       console.log('Order creation response status:', response.status);
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log('Order created successfully:', result);
@@ -225,11 +225,11 @@ const Checkout = () => {
         } catch (jsonError) {
           responseData = { message: 'Payment verified successfully' };
         }
-        
-        return { 
-          success: true, 
+
+        return {
+          success: true,
           message: responseData?.message || 'Payment verified successfully',
-          ...responseData 
+          ...responseData
         };
       } else {
         const errorText = await response.text();
@@ -450,54 +450,54 @@ const Checkout = () => {
               {success ? '🎉 Payment Successful!' : '❌ Payment Failed'}
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="flex flex-col items-center py-6 px-4">
             {success ? (
               <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-6" />
             ) : (
               <XCircle className="h-20 w-20 text-red-500 mx-auto mb-6" />
             )}
-            
+
             <div className="text-center space-y-4">
               <DialogDescription className="text-base leading-relaxed text-gray-700">
                 {message}
               </DialogDescription>
-              
+
               {orderId && (
                 <div className={`border p-4 rounded-lg ${success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                   <div className={`text-sm font-medium ${success ? 'text-green-800' : 'text-red-800'}`}>Order ID</div>
                   <div className={`text-sm font-mono mt-1 ${success ? 'text-green-700' : 'text-red-700'}`}>{orderId}</div>
                 </div>
               )}
-              
+
               <div className="text-sm text-gray-500">
-                {success 
+                {success
                   ? "Thank you for your purchase! You can track your order status in the orders section."
                   : "If you need assistance, please contact our support team with your order details."
                 }
               </div>
             </div>
           </div>
-          
+
           <DialogFooter className="sm:justify-center gap-3">
             {success ? (
               <div className="flex gap-3 w-full">
-                <Button 
-                  variant="outline" 
-                  onClick={handlePaymentModalClose} 
+                <Button
+                  variant="outline"
+                  onClick={handlePaymentModalClose}
                   className="flex-1 border-gray-300 hover:bg-gray-50"
                 >
                   Close
                 </Button>
-                <Button 
+                <Button
                   variant="outline"
-                  onClick={handleShopAgain} 
+                  onClick={handleShopAgain}
                   className="flex-1 border-blue-300 text-blue-600 hover:bg-blue-50"
                 >
                   Shop Again
                 </Button>
-                <Button 
-                  onClick={handleNavigateToOrders} 
+                <Button
+                  onClick={handleNavigateToOrders}
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                 >
                   My Orders
@@ -505,9 +505,9 @@ const Checkout = () => {
               </div>
             ) : (
               <div className="flex gap-3 w-full">
-                <Button 
-                  variant="outline" 
-                  onClick={handlePaymentModalClose} 
+                <Button
+                  variant="outline"
+                  onClick={handlePaymentModalClose}
                   className="flex-1 border-gray-300 hover:bg-gray-50"
                 >
                   Close
@@ -599,41 +599,98 @@ const Checkout = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {designItems.map((item) => (
-                    <div key={item.id} className="flex gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg">
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-md flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-sm truncate">{item.title}</h4>
-                        <p className="text-xs text-muted-foreground">{item.category}</p>
-                        <div className="flex gap-1 mt-1 flex-wrap">
-                          <Badge variant="outline" className="text-xs">
-                            Digital Design
-                          </Badge>
-                        </div>
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-2 gap-1">
-                          <span className="text-sm">Qty: {item.quantity}</span>
-                          <span className="font-semibold text-sm">
-                            ₹{((item.discountPrice || item.price) * item.quantity).toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Files: AI, EPS, PNG, JPG, PDF
+                  {designItems.map((item) => {
+                    // Calculate final price with discount
+                    const originalPrice = item.price;
+                    const discountPercentage = item.discountPrice || 0;
+                    const discountAmount = originalPrice * discountPercentage / 100;
+                    const finalPrice = originalPrice - discountAmount;
+                    const roundedFinalPrice = Math.round(finalPrice);
+                    const itemTotal = roundedFinalPrice * item.quantity;
+                    const originalTotal = originalPrice * item.quantity;
+                    const hasDiscount = discountPercentage > 0;
+
+                    console.log(`Order Summary - Item: ${item.title}`);
+                    console.log(`  Original price: ${originalPrice}`);
+                    console.log(`  Discount percentage: ${discountPercentage}%`);
+                    console.log(`  Discount amount: ${discountAmount}`);
+                    console.log(`  Final price (before rounding): ${finalPrice}`);
+                    console.log(`  Final price (rounded up): ${roundedFinalPrice}`);
+                    console.log(`  Quantity: ${item.quantity}`);
+                    console.log(`  Item total: ${itemTotal}`);
+
+                    return (
+                      <div key={item.id} className="flex gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-md flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm truncate">{item.title}</h4>
+                          <p className="text-xs text-muted-foreground">{item.category}</p>
+                          <div className="flex gap-1 mt-1 flex-wrap">
+                            <Badge variant="outline" className="text-xs">
+                              Digital Design
+                            </Badge>
+                            {hasDiscount && (
+                              <Badge className="text-xs bg-green-100 text-green-800">
+                                {discountPercentage}% OFF
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-2 gap-1">
+                            <span className="text-sm">Qty: {item.quantity}</span>
+                            <div className="text-right">
+                              <span className="font-semibold text-sm">
+                                ₹{itemTotal}
+                              </span>
+                              {hasDiscount && (
+                                <div className="text-xs text-muted-foreground line-through">
+                                  ₹{originalTotal}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Files: AI, EPS, PNG, JPG, PDF
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   <Separator />
 
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-sm">
                       <span>Subtotal</span>
-                      <span>₹{getTotalAmount().toFixed(2)}</span>
+                      <span>₹{Math.round(designItems.reduce((total, item) => {
+                        const originalPrice = item.price;
+                        const discountPercentage = item.discountPrice || 0;
+                        const discountAmount = originalPrice * discountPercentage / 100;
+                        const finalPrice = originalPrice - discountAmount;
+                        const roundedFinalPrice = Math.round(finalPrice);
+                        return total + (roundedFinalPrice * item.quantity);
+                      }, 0))}</span>
                     </div>
+                    {/* Show total savings if there are discounts */}
+                    {designItems.some(item => item.discountPrice > 0) && (
+                      <div className="flex justify-between items-center text-sm text-green-600">
+                        <span>Total Savings</span>
+                        <span>-₹{Math.round(
+                          designItems.reduce((total, item) => total + (item.price * item.quantity), 0) -
+                          designItems.reduce((total, item) => {
+                            const originalPrice = item.price;
+                            const discountPercentage = item.discountPrice || 0;
+                            const discountAmount = originalPrice * discountPercentage / 100;
+                            const finalPrice = originalPrice - discountAmount;
+                            const roundedFinalPrice = Math.round(finalPrice);
+                            return total + (roundedFinalPrice * item.quantity);
+                          }, 0)
+                        )}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center text-sm text-green-600">
                       <span>Digital Delivery</span>
                       <span>Free</span>
@@ -644,7 +701,14 @@ const Checkout = () => {
 
                   <div className="flex justify-between items-center font-bold text-lg">
                     <span>Total</span>
-                    <span className="text-primary">₹{getTotalAmount().toFixed(2)}</span>
+                    <span className="text-primary">₹{Math.round(designItems.reduce((total, item) => {
+                      const originalPrice = item.price;
+                      const discountPercentage = item.discountPrice || 0;
+                      const discountAmount = originalPrice * discountPercentage / 100;
+                      const finalPrice = originalPrice - discountAmount;
+                      const roundedFinalPrice = Math.round(finalPrice);
+                      return total + (roundedFinalPrice * item.quantity);
+                    }, 0))}</span>
                   </div>
 
                   <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
@@ -671,7 +735,14 @@ const Checkout = () => {
                         Processing Payment...
                       </div>
                     ) : (
-                      `Purchase Designs - ₹${getTotalAmount().toFixed(2)}`
+                      `Purchase Designs - ₹${Math.round(designItems.reduce((total, item) => {
+                        const originalPrice = item.price;
+                        const discountPercentage = item.discountPrice || 0;
+                        const discountAmount = originalPrice * discountPercentage / 100;
+                        const finalPrice = originalPrice - discountAmount;
+                        const roundedFinalPrice = Math.round(finalPrice);
+                        return total + (roundedFinalPrice * item.quantity);
+                      }, 0))}`
                     )}
                   </Button>
 
@@ -710,6 +781,9 @@ const Checkout = () => {
                 </CardContent>
               </Card>
             </div>
+
+
+
           </div>
         </div>
       </main>

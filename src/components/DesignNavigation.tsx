@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 const designCategories = [
   {
     name: "All Designs",
-    subcategories: ["All", "Floral", "World", "Abstract", "Stripes", "Tropical", "Placements", "Camouflage", "Nature", "2 & 3 Colour"]
+    subcategories: [ "Floral", "World", "Abstract", "Stripes", "Tropical", "Placements", "Camouflage", "Nature", "2 & 3 Colour"]
   },
   {
     name: "Womenswear", 
