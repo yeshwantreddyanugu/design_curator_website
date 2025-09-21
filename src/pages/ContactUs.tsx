@@ -45,7 +45,7 @@ const ContactUs: React.FC = () => {
     console.log("📤 Sending request with data:", requestData);
 
     try {
-      const response = await fetch('https://bfb140cdb26c.ngrok-free.app/api/contact', {
+      const response = await fetch('https://az.lytortech.com/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -81,7 +81,7 @@ const Header = () => {
                 onClick={() => setIsCustomFormOpen(true)}
               >
                 <PenTool className="h-4 w-4" />
-                Custom Design
+                Custom Project
               </button>
 
               <button
@@ -252,7 +252,7 @@ const Header = () => {
                   }}
                 >
                   <PenTool className="h-4 w-4" />
-                  Custom Design
+                  Custom Project
                 </button>
 
                 {/* Premium */}

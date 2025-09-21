@@ -1,8 +1,12 @@
 import { Instagram, Twitter, Facebook, Youtube } from "lucide-react";
 
 const Footer = () => {
+  const handleNavigation = (path) => {
+    window.location.href = path;
+  };
+
   return (
-    <footer className="bg-foreground text-background py-16">
+    <footer className="bg-foreground text-background py-16 relative z-10">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           {/* Brand */}
@@ -26,11 +30,44 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold text-background mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-background/80 hover:text-primary transition-smooth">About Us</a></li>
-              <li><a href="#" className="text-background/80 hover:text-primary transition-smooth">Licensing</a></li>
-              <li><a href="/contactUs" className="text-background/80 hover:text-primary transition-smooth">Become a Designer</a></li>
-              <li><a href="/contactUs" className="text-background/80 hover:text-primary transition-smooth">Help Center</a></li>
-              <li><a href="/contactUs" className="text-background/80 hover:text-primary transition-smooth">Contact Us</a></li>
+              <li><a href="#" className="text-background/80 hover:text-primary transition-smooth block py-1">About Us</a></li>
+              <li><a href="#" className="text-background/80 hover:text-primary transition-smooth block py-1">Licensing</a></li>
+              <li>
+                <a 
+                  href="/contactUs" 
+                  className="text-background/80 hover:text-primary transition-smooth block py-1"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavigation('/contactUs');
+                  }}
+                >
+                  Become a Designer
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="/contactUs" 
+                  className="text-background/80 hover:text-primary transition-smooth block py-1"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavigation('/contactUs');
+                  }}
+                >
+                  Help Center
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="/contactUs" 
+                  className="text-background/80 hover:text-primary transition-smooth block py-1"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavigation('/contactUs');
+                  }}
+                >
+                  Contact Us
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -38,10 +75,10 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold text-background mb-4">Categories</h4>
             <ul className="space-y-2">
-              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth">Tropical</a></li>
-              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth">Geometric</a></li>
-              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth">Floral</a></li>
-              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth">Abstract</a></li>
+              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth block py-1">Tropical</a></li>
+              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth block py-1">Geometric</a></li>
+              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth block py-1">Floral</a></li>
+              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth block py-1">Abstract</a></li>
             </ul>
           </div>
         </div>
