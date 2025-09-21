@@ -1,8 +1,12 @@
 import { Instagram, Twitter, Facebook, Youtube } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const Footer = () => {
+  const navigate = useNavigate(); // Initialize navigate function
+
   const handleNavigation = (path) => {
-    window.location.href = path;
+    navigate(path); // Use React Router's navigate function
+    window.scrollTo(0, 0); // Scroll to top after navigation
   };
 
   return (
@@ -30,43 +34,45 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold text-background mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-background/80 hover:text-primary transition-smooth block py-1">About Us</a></li>
-              <li><a href="#" className="text-background/80 hover:text-primary transition-smooth block py-1">Licensing</a></li>
               <li>
-                <a 
-                  href="/contactUs" 
-                  className="text-background/80 hover:text-primary transition-smooth block py-1"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavigation('/contactUs');
-                  }}
+                <button 
+                  className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
+                  onClick={() => handleNavigation('/about')}
+                >
+                  About Us
+                </button>
+              </li>
+              <li>
+                <button 
+                  className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
+                  onClick={() => handleNavigation('/licensing')}
+                >
+                  Licensing
+                </button>
+              </li>
+              <li>
+                <button 
+                  className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
+                  onClick={() => handleNavigation('/contactUs')}
                 >
                   Become a Designer
-                </a>
+                </button>
               </li>
               <li>
-                <a 
-                  href="/contactUs" 
-                  className="text-background/80 hover:text-primary transition-smooth block py-1"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavigation('/contactUs');
-                  }}
+                <button 
+                  className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
+                  onClick={() => handleNavigation('/help')}
                 >
                   Help Center
-                </a>
+                </button>
               </li>
               <li>
-                <a 
-                  href="/contactUs" 
-                  className="text-background/80 hover:text-primary transition-smooth block py-1"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavigation('/contactUs');
-                  }}
+                <button 
+                  className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
+                  onClick={() => handleNavigation('/contactUs')}
                 >
                   Contact Us
-                </a>
+                </button>
               </li>
             </ul>
           </div>
@@ -75,10 +81,38 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold text-background mb-4">Categories</h4>
             <ul className="space-y-2">
-              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth block py-1">Tropical</a></li>
-              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth block py-1">Geometric</a></li>
-              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth block py-1">Floral</a></li>
-              <li><a href="/items" className="text-background/80 hover:text-primary transition-smooth block py-1">Abstract</a></li>
+              <li>
+                <button 
+                  className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
+                  onClick={() => handleNavigation('/items')}
+                >
+                  Tropical
+                </button>
+              </li>
+              <li>
+                <button 
+                  className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
+                  onClick={() => handleNavigation('/items')}
+                >
+                  Geometric
+                </button>
+              </li>
+              <li>
+                <button 
+                  className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
+                  onClick={() => handleNavigation('/items')}
+                >
+                  Floral
+                </button>
+              </li>
+              <li>
+                <button 
+                  className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
+                  onClick={() => handleNavigation('/items')}
+                >
+                  Abstract
+                </button>
+              </li>
             </ul>
           </div>
         </div>
@@ -89,9 +123,24 @@ const Footer = () => {
             © 2025 Aza Arts. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-background/60 hover:text-primary transition-smooth text-sm">Privacy Policy</a>
-            <a href="#" className="text-background/60 hover:text-primary transition-smooth text-sm">Terms of Service</a>
-            <a href="#" className="text-background/60 hover:text-primary transition-smooth text-sm">Cookie Policy</a>
+            <button 
+              className="text-background/60 hover:text-primary transition-smooth text-sm"
+              onClick={() => handleNavigation('/privacy')}
+            >
+              Privacy Policy
+            </button>
+            <button 
+              className="text-background/60 hover:text-primary transition-smooth text-sm"
+              onClick={() => handleNavigation('/terms')}
+            >
+              Terms of Service
+            </button>
+            <button 
+              className="text-background/60 hover:text-primary transition-smooth text-sm"
+              onClick={() => handleNavigation('/cookies')}
+            >
+              Cookie Policy
+            </button>
           </div>
         </div>
       </div>
