@@ -2,14 +2,17 @@ import React from "react";
 import { ArrowLeft, Palette, Eye, Users, Brush, Layers, Frame, Handshake, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useNavigate } from "react-router-dom";
 
 const AboutUs: React.FC = () => {
+  const navigate = useNavigate();
+
   const handleBack = () => {
-    window.location.href = "/";
+    navigate("/");
   };
 
   const handleContactUs = () => {
-    window.location.href = "/contactUs";
+    navigate("/contactUs");
   };
 
   return (
