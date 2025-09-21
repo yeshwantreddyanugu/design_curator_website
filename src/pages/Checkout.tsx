@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, ShoppingBag, FileText, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
@@ -48,15 +48,36 @@ declare global {
   }
 }
 
+// Updated OrderData interface to match backend expectations
 interface OrderData {
   uid: string;
   email: string;
   name: string;
   phone: string;
   address: string;
-  designs: { id: number }[];
+  designs: {
+    id: number;
+    designName: string;
+    category: string;
+    subcategory: string;
+    price: number;
+    discountPrice: number;
+    availableColors: string[];
+    imageUrls: string[];
+    tags: string[];
+    description: string;
+    fileSizePx: string;
+    fileSizeCm: string;
+    dpi: number;
+    includedFiles: string;
+    licenseType: string;
+    isPremium: boolean;
+    isTrending: boolean;
+    isNewArrival: boolean;
+  }[];
   quantity: number;
   totalAmount: number;
+  status: string;
 }
 
 interface CreateOrderResponse {
@@ -93,6 +114,7 @@ const Checkout = () => {
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [shouldPreventRedirect, setShouldPreventRedirect] = useState(false);
   const [paymentResultModal, setPaymentResultModal] = useState<{
     isOpen: boolean;
     result: PaymentResult | null;
@@ -105,7 +127,7 @@ const Checkout = () => {
   });
 
   // Base API URL
-  const API_BASE_URL = 'https://028f702fdabc.ngrok-free.app/api';
+  const API_BASE_URL = 'https://963392021b17.ngrok-free.app/api';
 
   // Razorpay key
   const RAZORPAY_KEY = 'rzp_live_fN6UZTO4YZyRd4';
@@ -113,17 +135,12 @@ const Checkout = () => {
   // Filter cart items to only include designs
   const designItems = cartItems.filter(item => item.type === 'design');
 
-  // Redirect if no design items in cart
+  // Redirect if no design items in cart (but only if not during payment process)
   useEffect(() => {
-    if (designItems.length === 0) {
+    if (designItems.length === 0 && !shouldPreventRedirect) {
       navigate('/items');
-      // toast({
-      //   title: "No designs in cart",
-      //   description: "Please add designs to your cart before checkout.",
-      //   variant: "destructive",
-      // });
     }
-  }, [designItems.length, navigate, toast]);
+  }, [designItems.length, navigate, shouldPreventRedirect]);
 
   // Pre-fill form with user data
   useEffect(() => {
@@ -166,7 +183,9 @@ const Checkout = () => {
   };
 
   const createOrder = async (orderData: OrderData): Promise<CreateOrderResponse> => {
-    console.log('Creating order with payload:', orderData);
+    console.log('=== CREATE ORDER API CALL ===');
+    console.log('Endpoint: POST /api/orders');
+    console.log('Request Data:', JSON.stringify(orderData, null, 2));
 
     try {
       const response = await fetch(`${API_BASE_URL}/orders`, {
@@ -178,19 +197,19 @@ const Checkout = () => {
         body: JSON.stringify(orderData),
       });
 
-      console.log('Order creation response status:', response.status);
+      console.log('Response Status:', response.status);
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Order created successfully:', result);
+        console.log('Response Data:', JSON.stringify(result, null, 2));
         return result;
       } else {
         const errorText = await response.text();
-        console.error('Failed to create order:', errorText);
+        console.log('Error Response:', errorText);
         throw new Error(`Failed to create order: ${errorText}`);
       }
     } catch (error) {
-      console.error('Exception occurred during API call:', error);
+      console.log('Network Error:', error);
       throw error;
     }
   };
@@ -201,10 +220,9 @@ const Checkout = () => {
     razorpayPaymentId: string;
     razorpaySignature: string;
   }) => {
-    console.log('Verifying payment with data:', {
-      ...paymentData,
-      razorpaySignature: paymentData.razorpaySignature ? `${paymentData.razorpaySignature.substring(0, 10)}...` : 'null'
-    });
+    console.log('=== VERIFY PAYMENT API CALL ===');
+    console.log('Endpoint: POST /api/orders/verify-payment');
+    console.log('Request Data:', JSON.stringify(paymentData, null, 2));
 
     try {
       const response = await fetch(`${API_BASE_URL}/orders/verify-payment`, {
@@ -216,14 +234,16 @@ const Checkout = () => {
         body: JSON.stringify(paymentData),
       });
 
-      console.log('Payment verification response status:', response.status);
+      console.log('Response Status:', response.status);
 
       if (response.status === 200) {
         let responseData;
         try {
           responseData = await response.json();
+          console.log('Response Data:', JSON.stringify(responseData, null, 2));
         } catch (jsonError) {
           responseData = { message: 'Payment verified successfully' };
+          console.log('Response Data: Payment verified successfully (no JSON response)');
         }
 
         return {
@@ -233,12 +253,14 @@ const Checkout = () => {
         };
       } else {
         const errorText = await response.text();
+        console.log('Error Response:', errorText);
         return {
           success: false,
           message: `Payment verification failed with status ${response.status}: ${errorText}`
         };
       }
     } catch (error) {
+      console.log('Network Error:', error);
       return {
         success: false,
         message: `Network error: ${error.message}`
@@ -255,6 +277,9 @@ const Checkout = () => {
       description: 'Design Purchase',
       order_id: orderData.razorpayOrderId,
       handler: async (response: RazorpayResponse) => {
+        console.log('=== RAZORPAY HANDLER CALLED ===');
+        console.log('Razorpay Response:', response);
+        
         try {
           const verificationResult = await verifyPayment({
             orderId: orderData.order.orderId,
@@ -263,24 +288,36 @@ const Checkout = () => {
             razorpaySignature: response.razorpay_signature,
           });
 
+          console.log('=== VERIFICATION RESULT ===');
+          console.log('Success:', verificationResult.success);
+          console.log('Message:', verificationResult.message);
+
+          // Show success modal if verification response status is 200 (regardless of response content)
           if (verificationResult.success) {
+            console.log('=== SHOWING SUCCESS MODAL ===');
+            // Prevent automatic redirect until user makes a choice
+            setShouldPreventRedirect(true);
             clearCart();
 
-            setPaymentResultModal({
+            const modalData = {
               isOpen: true,
               result: {
                 success: true,
-                message: verificationResult.message || 'Payment verified successfully! Your order has been confirmed.',
+                message: 'Payment verified successfully! Your order has been confirmed.',
                 orderId: orderData.order.orderId,
                 status: 'completed'
               }
-            });
+            };
+
+            console.log('Setting payment result modal:', modalData);
+            setPaymentResultModal(modalData);
 
             toast({
-              title: "Payment Successful! 🎉",
+              title: "Payment Successful!",
               description: "Your order has been confirmed and payment verified.",
             });
           } else {
+            console.log('=== SHOWING FAILURE MODAL ===');
             setPaymentResultModal({
               isOpen: true,
               result: {
@@ -292,6 +329,8 @@ const Checkout = () => {
             });
           }
         } catch (error) {
+          console.log('=== ERROR IN VERIFICATION ===');
+          console.error('Error:', error);
           setPaymentResultModal({
             isOpen: true,
             result: {
@@ -364,20 +403,45 @@ const Checkout = () => {
     setIsProcessing(true);
 
     try {
-      // Generate unique order ID
-      const orderId = `ORD${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-
-      // Prepare designs array with IDs
-      const designs = designItems.map(item => ({
-        id: item.designId || parseInt(item.id.split('_')[1]) || 1
-      }));
-
       // Calculate total quantity and amount
       const quantity = designItems.reduce((total, item) => total + item.quantity, 0);
       const totalAmount = designItems.reduce((total, item) => {
-        const price = item.discountPrice || item.price;
-        return total + (price * item.quantity);
+        const originalPrice = item.price;
+        const discountPercentage = item.discountPrice || 0;
+        const discountAmount = originalPrice * discountPercentage / 100;
+        const finalPrice = originalPrice - discountAmount;
+        const roundedFinalPrice = Math.ceil(finalPrice);
+        return total + (roundedFinalPrice * item.quantity);
       }, 0);
+
+      // Transform cart items to match backend design format
+      const designs = designItems.map(item => {
+        const originalPrice = item.price;
+        const discountPercentage = item.discountPrice || 0;
+        const discountAmount = originalPrice * discountPercentage / 100;
+        const finalDiscountedPrice = originalPrice - discountAmount;
+
+        return {
+          id: item.designId,
+          designName: item.title,
+          category: item.category,
+          subcategory: item.subcategory || 'n',
+          price: originalPrice,
+          discountPrice: Math.ceil(finalDiscountedPrice), // This should be the final discounted price, not percentage
+          availableColors: item.availableColors || [],
+          imageUrls: [item.image],
+          tags: item.tags || [],
+          description: item.description || '',
+          fileSizePx: (item as any).fileSizePx || '1600x1280',
+          fileSizeCm: (item as any).fileSizeCm || '56.44x45.16', 
+          dpi: (item as any).dpi || 72,
+          includedFiles: (item as any).includedFiles || 'WEBP, SVG, PNG, AI, EPS, JPEG',
+          licenseType: (item as any).licenseType || 'Commercial',
+          isPremium: item.isPremium === true || item.isPremium === 'true',
+          isTrending: (item as any).isTrending === true || (item as any).isTrending === 'true',
+          isNewArrival: (item as any).isNewArrival === true || (item as any).isNewArrival === 'true'
+        };
+      });
 
       const orderData: OrderData = {
         uid: user.uid,
@@ -387,7 +451,8 @@ const Checkout = () => {
         address: user.address || contactForm.address,
         designs: designs,
         quantity: quantity,
-        totalAmount: 100 // Fixed for testing
+        totalAmount: totalAmount, // Use calculated total amount
+        status: 'PENDING'
       };
 
       // Create order
@@ -397,22 +462,15 @@ const Checkout = () => {
       initializeRazorpay(createdOrder, contactForm);
 
     } catch (error) {
+      console.log('Checkout Error:', error);
       toast({
-        title: "Checkout Failed ❌",
+        title: "Checkout Failed",
         description: "Failed to create order. Please try again.",
         variant: "destructive",
       });
 
       setIsProcessing(false);
     }
-  };
-
-  const getTotalAmount = () => {
-    const total = designItems.reduce((total, item) => {
-      const price = item.discountPrice || item.price;
-      return total + (price * item.quantity);
-    }, 0);
-    return total;
   };
 
   const handleAuthSuccess = () => {
@@ -425,85 +483,170 @@ const Checkout = () => {
 
   const handleNavigateToOrders = () => {
     setPaymentResultModal({ isOpen: false, result: null });
+    setShouldPreventRedirect(false); // Reset redirect prevention
     navigate('/orders');
   };
 
-  const handleShopAgain = () => {
+  const handleShopMore = () => {
     setPaymentResultModal({ isOpen: false, result: null });
-    navigate('/');
+    setShouldPreventRedirect(false); // Reset redirect prevention
+    navigate('/items');
   };
 
-  if (designItems.length === 0) {
+  if (designItems.length === 0 && !shouldPreventRedirect) {
     return null;
   }
 
   const renderPaymentResultModal = () => {
-    if (!paymentResultModal.result || !paymentResultModal.isOpen) return null;
+    if (!paymentResultModal.isOpen || !paymentResultModal.result) return null;
 
     const { success, message, orderId } = paymentResultModal.result;
 
-    return (
-      <Dialog open={paymentResultModal.isOpen} onOpenChange={handlePaymentModalClose}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className={`text-center text-xl font-semibold ${success ? 'text-green-600' : 'text-red-600'}`}>
-              {success ? '🎉 Payment Successful!' : '❌ Payment Failed'}
-            </DialogTitle>
-          </DialogHeader>
+    if (success) {
+      return (
+        <Dialog open={paymentResultModal.isOpen} onOpenChange={handlePaymentModalClose}>
+          <DialogContent className="sm:max-w-lg">
+            <div className="relative overflow-hidden">
+              {/* Success Animation Background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 opacity-60"></div>
+              
+              {/* Decorative Elements */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-100 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-100 to-transparent rounded-full translate-y-12 -translate-x-12"></div>
+              
+              <div className="relative z-10 p-6">
+                <DialogHeader className="text-center space-y-4">
+                  {/* Success Icon with Animation */}
+                  <div className="mx-auto w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                    <CheckCircle className="h-12 w-12 text-white" />
+                  </div>
+                  
+                  <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-2">
+                    <Sparkles className="h-6 w-6 text-yellow-500" />
+                    Payment Successful!
+                    <Sparkles className="h-6 w-6 text-yellow-500" />
+                  </DialogTitle>
+                  
+                  <DialogDescription className="text-gray-600 text-base leading-relaxed">
+                    Congratulations! Your payment has been processed successfully and your designs are ready for download.
+                  </DialogDescription>
+                </DialogHeader>
 
-          <div className="flex flex-col items-center py-6 px-4">
-            {success ? (
-              <CheckCircle className="h-20 w-20 text-green-500 mx-auto mb-6" />
-            ) : (
-              <XCircle className="h-20 w-20 text-red-500 mx-auto mb-6" />
-            )}
+                <div className="mt-8 space-y-6">
+                  {/* Order Details Card */}
+                  <div className="bg-white border border-green-200 rounded-xl p-5 shadow-sm">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Order Confirmed</h3>
+                        <p className="text-sm text-gray-500">Your designs will be delivered via email</p>
+                      </div>
+                    </div>
+                    
+                    {orderId && (
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="text-sm font-medium text-gray-700">Order ID</div>
+                        <div className="text-sm font-mono text-gray-900 mt-1 break-all">{orderId}</div>
+                      </div>
+                    )}
+                  </div>
 
-            <div className="text-center space-y-4">
-              <DialogDescription className="text-base leading-relaxed text-gray-700">
-                {message}
-              </DialogDescription>
+                  {/* Features Highlight */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                        <AlertCircle className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-blue-900">What's Next?</h4>
+                        <ul className="text-sm text-blue-800 space-y-1">
+                          <li>• Check your email for download links</li>
+                          <li>• Access high-resolution design files</li>
+                          <li>• Use for commercial and personal projects</li>
+                          <li>• Lifetime access to your purchases</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
 
-              {orderId && (
-                <div className={`border p-4 rounded-lg ${success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                  <div className={`text-sm font-medium ${success ? 'text-green-800' : 'text-red-800'}`}>Order ID</div>
-                  <div className={`text-sm font-mono mt-1 ${success ? 'text-green-700' : 'text-red-700'}`}>{orderId}</div>
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={handleShopMore}
+                      className="flex-1 h-12 border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 font-medium"
+                    >
+                      <ShoppingBag className="h-4 w-4 mr-2" />
+                      Shop More Designs
+                    </Button>
+                    <Button
+                      onClick={handleNavigateToOrders}
+                      className="flex-1 h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      View My Orders
+                    </Button>
+                  </div>
+
+                  {/* Divider with text */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="bg-white px-4 text-gray-500">Thank you for choosing Pattern Bank</span>
+                    </div>
+                  </div>
+
+                  {/* Close Button */}
+                  <Button
+                    variant="ghost"
+                    onClick={handlePaymentModalClose}
+                    className="w-full text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                  >
+                    Close
+                  </Button>
                 </div>
-              )}
-
-              <div className="text-sm text-gray-500">
-                {success
-                  ? "Thank you for your purchase! You can track your order status in the orders section."
-                  : "If you need assistance, please contact our support team with your order details."
-                }
               </div>
             </div>
-          </div>
+          </DialogContent>
+        </Dialog>
+      );
+    } else {
+      // Failure Modal (keep existing design)
+      return (
+        <Dialog open={paymentResultModal.isOpen} onOpenChange={handlePaymentModalClose}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-center text-xl font-semibold text-red-600">
+                Payment Failed
+              </DialogTitle>
+            </DialogHeader>
 
-          <DialogFooter className="sm:justify-center gap-3">
-            {success ? (
-              <div className="flex gap-3 w-full">
-                <Button
-                  variant="outline"
-                  onClick={handlePaymentModalClose}
-                  className="flex-1 border-gray-300 hover:bg-gray-50"
-                >
-                  Close
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleShopAgain}
-                  className="flex-1 border-blue-300 text-blue-600 hover:bg-blue-50"
-                >
-                  Shop Again
-                </Button>
-                <Button
-                  onClick={handleNavigateToOrders}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                >
-                  My Orders
-                </Button>
+            <div className="flex flex-col items-center py-6 px-4">
+              <XCircle className="h-20 w-20 text-red-500 mx-auto mb-6" />
+
+              <div className="text-center space-y-4">
+                <DialogDescription className="text-base leading-relaxed text-gray-700">
+                  {message}
+                </DialogDescription>
+
+                {orderId && (
+                  <div className="border p-4 rounded-lg bg-red-50 border-red-200">
+                    <div className="text-sm font-medium text-red-800">Order ID</div>
+                    <div className="text-sm font-mono mt-1 text-red-700">{orderId}</div>
+                  </div>
+                )}
+
+                <div className="text-sm text-gray-500">
+                  If you need assistance, please contact our support team with your order details.
+                </div>
               </div>
-            ) : (
+            </div>
+
+            <DialogFooter className="sm:justify-center gap-3">
               <div className="flex gap-3 w-full">
                 <Button
                   variant="outline"
@@ -513,11 +656,11 @@ const Checkout = () => {
                   Close
                 </Button>
               </div>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      );
+    }
   };
 
   return (
@@ -605,19 +748,10 @@ const Checkout = () => {
                     const discountPercentage = item.discountPrice || 0;
                     const discountAmount = originalPrice * discountPercentage / 100;
                     const finalPrice = originalPrice - discountAmount;
-                    const roundedFinalPrice = Math.round(finalPrice);
+                    const roundedFinalPrice = Math.ceil(finalPrice);
                     const itemTotal = roundedFinalPrice * item.quantity;
                     const originalTotal = originalPrice * item.quantity;
                     const hasDiscount = discountPercentage > 0;
-
-                    console.log(`Order Summary - Item: ${item.title}`);
-                    console.log(`  Original price: ${originalPrice}`);
-                    console.log(`  Discount percentage: ${discountPercentage}%`);
-                    console.log(`  Discount amount: ${discountAmount}`);
-                    console.log(`  Final price (before rounding): ${finalPrice}`);
-                    console.log(`  Final price (rounded up): ${roundedFinalPrice}`);
-                    console.log(`  Quantity: ${item.quantity}`);
-                    console.log(`  Item total: ${itemTotal}`);
 
                     return (
                       <div key={item.id} className="flex gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg">
@@ -665,12 +799,12 @@ const Checkout = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-sm">
                       <span>Subtotal</span>
-                      <span>₹{Math.round(designItems.reduce((total, item) => {
+                      <span>₹{Math.ceil(designItems.reduce((total, item) => {
                         const originalPrice = item.price;
                         const discountPercentage = item.discountPrice || 0;
                         const discountAmount = originalPrice * discountPercentage / 100;
                         const finalPrice = originalPrice - discountAmount;
-                        const roundedFinalPrice = Math.round(finalPrice);
+                        const roundedFinalPrice = Math.ceil(finalPrice);
                         return total + (roundedFinalPrice * item.quantity);
                       }, 0))}</span>
                     </div>
@@ -678,14 +812,14 @@ const Checkout = () => {
                     {designItems.some(item => item.discountPrice > 0) && (
                       <div className="flex justify-between items-center text-sm text-green-600">
                         <span>Total Savings</span>
-                        <span>-₹{Math.round(
+                        <span>-₹{Math.ceil(
                           designItems.reduce((total, item) => total + (item.price * item.quantity), 0) -
                           designItems.reduce((total, item) => {
                             const originalPrice = item.price;
                             const discountPercentage = item.discountPrice || 0;
                             const discountAmount = originalPrice * discountPercentage / 100;
                             const finalPrice = originalPrice - discountAmount;
-                            const roundedFinalPrice = Math.round(finalPrice);
+                            const roundedFinalPrice = Math.ceil(finalPrice);
                             return total + (roundedFinalPrice * item.quantity);
                           }, 0)
                         )}</span>
@@ -701,12 +835,12 @@ const Checkout = () => {
 
                   <div className="flex justify-between items-center font-bold text-lg">
                     <span>Total</span>
-                    <span className="text-primary">₹{Math.round(designItems.reduce((total, item) => {
+                    <span className="text-primary">₹{Math.ceil(designItems.reduce((total, item) => {
                       const originalPrice = item.price;
                       const discountPercentage = item.discountPrice || 0;
                       const discountAmount = originalPrice * discountPercentage / 100;
                       const finalPrice = originalPrice - discountAmount;
-                      const roundedFinalPrice = Math.round(finalPrice);
+                      const roundedFinalPrice = Math.ceil(finalPrice);
                       return total + (roundedFinalPrice * item.quantity);
                     }, 0))}</span>
                   </div>
@@ -735,12 +869,12 @@ const Checkout = () => {
                         Processing Payment...
                       </div>
                     ) : (
-                      `Purchase Designs - ₹${Math.round(designItems.reduce((total, item) => {
+                      `Purchase Designs - ₹${Math.ceil(designItems.reduce((total, item) => {
                         const originalPrice = item.price;
                         const discountPercentage = item.discountPrice || 0;
                         const discountAmount = originalPrice * discountPercentage / 100;
                         const finalPrice = originalPrice - discountAmount;
-                        const roundedFinalPrice = Math.round(finalPrice);
+                        const roundedFinalPrice = Math.ceil(finalPrice);
                         return total + (roundedFinalPrice * item.quantity);
                       }, 0))}`
                     )}
@@ -781,9 +915,6 @@ const Checkout = () => {
                 </CardContent>
               </Card>
             </div>
-
-
-
           </div>
         </div>
       </main>

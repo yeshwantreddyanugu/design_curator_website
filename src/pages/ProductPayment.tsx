@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, CreditCard, Shield, CheckCircle, XCircle, Package } from "lucide-react";
+import { ArrowLeft, CreditCard, Shield, CheckCircle, XCircle, Package, ShoppingBag } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -56,6 +56,7 @@ const PaymentPage = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [currentOrderId, setCurrentOrderId] = useState<number | null>(null);
+  const [razorpayOrderId, setRazorpayOrderId] = useState<string | null>(null);
   
   // Customer form data
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails>({
@@ -81,6 +82,20 @@ const PaymentPage = () => {
       setIsFormModalOpen(true);
     }
   }, [purchaseData, user]);
+
+  // Load Razorpay script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
 
   // Handle form input changes
   const handleInputChange = (field: keyof CustomerDetails, value: string) => {
@@ -134,13 +149,14 @@ const PaymentPage = () => {
         selectedColor: purchaseData.selectedColor,
         selectedSize: purchaseData.selectedSize,
         unitPrice: purchaseData.price,
+        totalAmount: purchaseData.totalAmount,
         paymentMethod: customerDetails.paymentMethod,
         orderNotes: customerDetails.orderNotes
       };
 
       console.log("📤 Order payload:", orderPayload);
 
-      const response = await fetch('https://az.lytortech.com/api/orders/products', {
+      const response = await fetch('https://963392021b17.ngrok-free.app/api/orders/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -167,7 +183,7 @@ const PaymentPage = () => {
   const createPaymentOrder = async (orderId: number): Promise<string> => {
     try {
       console.log("🌐 Creating payment order for:", orderId);
-      const response = await fetch(`https://az.lytortech.com/api/orders/products/${orderId}/payment`, {
+      const response = await fetch(`https://963392021b17.ngrok-free.app/api/orders/products/${orderId}/payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -193,16 +209,16 @@ const PaymentPage = () => {
   const verifyPayment = async (orderId: number, paymentData: any): Promise<PaymentResult> => {
     try {
       console.log("🌐 Verifying payment for order:", orderId);
-      const response = await fetch(`https://az.lytortech.com/api/orders/products/${orderId}/verify-payment`, {
+      const response = await fetch(`https://963392021b17.ngrok-free.app/api/orders/products/${orderId}/verify-payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true'
         },
         body: JSON.stringify({
-          orderId: paymentData.razorpay_order_id,
-          paymentId: paymentData.razorpay_payment_id,
-          signature: paymentData.razorpay_signature
+          razorpay_order_id: paymentData.razorpay_order_id,
+          razorpay_payment_id: paymentData.razorpay_payment_id,
+          razorpay_signature: paymentData.razorpay_signature
         })
       });
 
@@ -226,59 +242,65 @@ const PaymentPage = () => {
 
   // Handle Razorpay payment
   const initiateRazorpayPayment = (razorpayOrderId: string, orderId: number) => {
-    if (!window.Razorpay) {
-      toast({
-        title: "Payment Error",
-        description: "Payment gateway not loaded. Please refresh and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Wait for Razorpay to load
+    const checkRazorpay = () => {
+      if (window.Razorpay) {
+        const options = {
+          key: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_live_fN6UZTO4YZyRd4',
+          amount: purchaseData!.totalAmount * 100,
+          currency: 'INR',
+          name: 'Aza Arts',
+          description: `Purchase: ${purchaseData!.productName}`,
+          order_id: razorpayOrderId,
+          handler: async function (response: any) {
+            console.log("💳 Razorpay payment response:", response);
+            
+            setIsProcessing(true);
+            const verificationResult = await verifyPayment(orderId, response);
+            
+            setPaymentResult(verificationResult);
+            setIsProcessing(false);
+            setIsPaymentModalOpen(true);
+            
+            if (verificationResult.success) {
+              toast({
+                title: "Payment Successful!",
+                description: "Your order has been confirmed.",
+              });
+            }
+          },
+          prefill: {
+            name: customerDetails.customerName,
+            email: customerDetails.customerEmail,
+            contact: customerDetails.customerPhone
+          },
+          notes: {
+            productId: purchaseData!.productId,
+            quantity: purchaseData!.quantity
+          },
+          theme: {
+            color: '#3B82F6'
+          },
+          modal: {
+            ondismiss: function() {
+              console.log("💳 Payment cancelled by user");
+              setIsProcessing(false);
+              toast({
+                title: "Payment Cancelled",
+                description: "You can retry payment anytime",
+              });
+            }
+          }
+        };
 
-    const options = {
-      key: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_live_BnPhMdUqppmXgD', // Replace with your Razorpay key
-      amount: purchaseData!.totalAmount * 100, // Amount in paise
-      currency: 'INR',
-      name: 'Your Store Name',
-      description: `Purchase: ${purchaseData!.productName}`,
-      order_id: razorpayOrderId,
-      handler: async function (response: any) {
-        console.log("💳 Razorpay payment response:", response);
-        
-        setIsProcessing(true);
-        const verificationResult = await verifyPayment(orderId, response);
-        
-        setPaymentResult(verificationResult);
-        setIsProcessing(false);
-        setIsPaymentModalOpen(true);
-      },
-      prefill: {
-        name: customerDetails.customerName,
-        email: customerDetails.customerEmail,
-        contact: customerDetails.customerPhone
-      },
-      notes: {
-        productId: purchaseData!.productId,
-        quantity: purchaseData!.quantity
-      },
-      theme: {
-        color: '#000000'
-      },
-      modal: {
-        ondismiss: function() {
-          console.log("💳 Payment cancelled by user");
-          setIsProcessing(false);
-          toast({
-            title: "Payment Cancelled",
-            description: "You can retry payment anytime",
-            variant: "destructive",
-          });
-        }
+        const razorpay = new window.Razorpay(options);
+        razorpay.open();
+      } else {
+        setTimeout(checkRazorpay, 100);
       }
     };
 
-    const razorpay = new window.Razorpay(options);
-    razorpay.open();
+    checkRazorpay();
   };
 
   // Handle form submission
@@ -302,6 +324,7 @@ const PaymentPage = () => {
       // Step 2: Create Payment Order
       console.log("🚀 Step 2: Creating payment order...");
       const razorpayOrderId = await createPaymentOrder(orderId);
+      setRazorpayOrderId(razorpayOrderId);
       
       // Step 3: Open Razorpay
       console.log("🚀 Step 3: Opening Razorpay...");
@@ -319,14 +342,19 @@ const PaymentPage = () => {
   };
 
   // Handle payment modal actions
-  const handlePaymentModalAction = (action: 'close' | 'orders') => {
+  const handleViewOrders = () => {
     setIsPaymentModalOpen(false);
-    
-    if (action === 'orders') {
-      navigate('/user-orders');
-    } else {
-      navigate(-1); // Go back to product detail
-    }
+    navigate('/user-orders');
+  };
+
+  const handleContinueShopping = () => {
+    setIsPaymentModalOpen(false);
+    navigate('/allProductItems');
+  };
+
+  const handleCloseModal = () => {
+    setIsPaymentModalOpen(false);
+    navigate(-1);
   };
 
   // Redirect if no purchase data or user
@@ -367,9 +395,6 @@ const PaymentPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Load Razorpay script */}
-      <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-      
       <Header />
 
       <main className="container mx-auto px-4 py-8">
@@ -428,12 +453,12 @@ const PaymentPage = () => {
                 </div>
                 <div className="flex justify-between">
                   <span>Price per item:</span>
-                  <span className="font-medium">${purchaseData.price.toFixed(2)}</span>
+                  <span className="font-medium">₹{purchaseData.price.toFixed(2)}</span>
                 </div>
                 <hr className="my-3" />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total:</span>
-                  <span className="text-primary">${purchaseData.totalAmount.toFixed(2)}</span>
+                  <span className="text-primary">₹{purchaseData.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>
@@ -581,42 +606,78 @@ const PaymentPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Payment Result Modal */}
-      <Dialog open={isPaymentModalOpen} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md text-center">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-center gap-2">
-              {paymentResult?.success ? (
-                <CheckCircle className="h-6 w-6 text-green-500" />
-              ) : (
-                <XCircle className="h-6 w-6 text-red-500" />
+      {/* Enhanced Payment Result Modal */}
+      <Dialog open={isPaymentModalOpen} onOpenChange={() => setIsPaymentModalOpen(false)}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          {paymentResult?.success ? (
+            // Success Modal
+            <div className="flex flex-col items-center text-center p-6">
+              {/* Success Icon */}
+              <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                <CheckCircle className="h-16 w-16 text-green-600" />
+              </div>
+
+              {/* Title */}
+              <h2 className="text-3xl font-bold text-green-800 mb-4">Payment Successful!</h2>
+
+              {/* Message */}
+              <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+                {paymentResult.message || 'Your payment has been verified successfully!'}
+              </p>
+
+              {/* Order ID */}
+              {paymentResult.orderId && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 w-full">
+                  <p className="text-sm font-semibold text-green-800 mb-1">Order ID</p>
+                  <p className="text-base font-mono text-green-700">{paymentResult.orderId}</p>
+                </div>
               )}
-              Payment {paymentResult?.success ? 'Successful' : 'Failed'}
-            </DialogTitle>
-            <DialogDescription>
-              {paymentResult?.message}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="pt-4">
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => handlePaymentModalAction('close')}
-                className="flex-1"
-              >
-                Close
-              </Button>
-              {paymentResult?.success && (
+
+              {/* Additional Info */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 w-full">
+                <p className="text-sm text-blue-800">
+                  <strong>What's next?</strong> Your order will be processed and shipped within 2-3 business days.
+                  You will receive a confirmation email with tracking details.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 w-full">
                 <Button
-                  onClick={() => handlePaymentModalAction('orders')}
-                  className="flex-1"
+                  onClick={handleViewOrders}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 text-lg"
+                  size="lg"
                 >
-                  View Orders
+                  <Package className="w-5 h-5 mr-2" />
+                  View My Orders
                 </Button>
-              )}
+                <Button
+                  onClick={handleContinueShopping}
+                  variant="outline"
+                  className="flex-1 border-blue-300 text-blue-600 hover:bg-blue-50 py-3 text-lg"
+                  size="lg"
+                >
+                  <ShoppingBag className="w-5 h-5 mr-2" />
+                  Continue Shopping
+                </Button>
+              </div>
+
+              {/* Support Info */}
+              <p className="text-sm text-gray-500 mt-6">
+                Need help? Contact support at support@azaarts.com
+              </p>
             </div>
-          </div>
+          ) : (
+            // Error Modal
+            <div className="flex flex-col items-center text-center p-6">
+              <XCircle className="h-20 w-20 text-red-500 mx-auto mb-6" />
+              <h2 className="text-2xl font-bold text-red-800 mb-4">Payment Failed</h2>
+              <p className="text-gray-700 mb-6">{paymentResult?.message}</p>
+              <Button onClick={handleCloseModal} className="w-full">
+                Try Again
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

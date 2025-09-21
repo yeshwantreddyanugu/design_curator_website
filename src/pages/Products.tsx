@@ -47,6 +47,16 @@ const Products = () => {
     sortDirection
   };
 
+  // Price calculation function (same as ProductDetail)
+  const calculateFinalPrice = (originalPrice: number, discountPercentage?: number): number => {
+    if (!discountPercentage || discountPercentage <= 0) {
+      return originalPrice;
+    }
+    const discountAmount = originalPrice * (discountPercentage / 100);
+    const finalPrice = originalPrice - discountAmount;
+    return Math.ceil(finalPrice);
+  };
+
   // Determine which hook to use based on filters
   let productsQuery;
   if (search) {
@@ -184,80 +194,148 @@ const Products = () => {
     </div>
   );
 
-  const ProductCard = ({ product }: { product: any }) => (
-    <Card 
-      className="group pattern-hover border-0 shadow-soft bg-card cursor-pointer"
-      onClick={() => navigate(`/product/${product.id}`)}
-    >
-      <CardContent className="p-0">
-        <div className="relative overflow-hidden rounded-lg">
-          <img
-            src={product.imageUrls?.[0] || '/placeholder.svg'}
-            alt={product.productName}
-            className={`w-full object-cover transition-smooth group-hover:scale-110 ${
-              viewMode === 'grid' ? 'h-64' : 'h-32'
-            }`}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-smooth" />
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-smooth">
-            <Button 
-              variant="ghost"
-              size="sm"
-              className="text-white border-white/30 hover:bg-white/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                // Add to cart logic here
-              }}
-            >
-              <ShoppingCart className="h-4 w-4" />
-            </Button>
-          </div>
-          {product.discountPrice && (
-            <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground">
-              Sale
-            </Badge>
-          )}
-        </div>
-        <div className={`p-4 ${viewMode === 'list' ? 'flex items-center justify-between' : ''}`}>
-          <div className={viewMode === 'list' ? 'flex-1' : ''}>
-            <h3 className="font-semibold text-foreground group-hover:text-primary transition-smooth">
-              {product.productName}
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              {product.category} • {product.subcategory}
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="font-semibold text-primary">
-                ${product.discountPrice || product.price}
-              </span>
-              {product.discountPrice && (
-                <span className="text-sm text-muted-foreground line-through">
-                  ${product.price}
-                </span>
-              )}
+  const ProductCard = ({ product }: { product: any }) => {
+    // Log the raw product data first
+    console.log("RAW PRODUCT DATA:", product);
+    
+    // Calculate final price: price is original, discountPrice is percentage
+    const originalPrice = product.price;
+    const discountPercentage = product.discountPrice || 0;
+    const hasDiscount = discountPercentage > 0;
+    
+    console.log("PRICE VARIABLES:", {
+      originalPrice,
+      discountPercentage, 
+      hasDiscount,
+      typeOfPrice: typeof originalPrice,
+      typeOfDiscount: typeof discountPercentage
+    });
+    
+    // Calculate final price only if there's a discount
+    const discountAmount = hasDiscount ? (originalPrice * discountPercentage / 100) : 0;
+    const priceBeforeCeil = hasDiscount ? (originalPrice - discountAmount) : originalPrice;
+    const finalPrice = Math.ceil(priceBeforeCeil);
+    const savingsAmount = hasDiscount ? originalPrice - finalPrice : 0;
+
+    console.log("DETAILED CALCULATION:", {
+      step1_originalPrice: originalPrice,
+      step2_discountPercentage: discountPercentage,
+      step3_discountAmount: discountAmount,
+      step4_priceBeforeCeil: priceBeforeCeil,
+      step5_finalPrice: finalPrice,
+      step6_savingsAmount: savingsAmount
+    });
+
+    console.log("DISPLAY VALUES:", {
+      willShowDiscount: hasDiscount,
+      displayFinalPrice: finalPrice.toFixed(2),
+      displayOriginalPrice: originalPrice.toFixed(2),
+      displaySavings: savingsAmount.toFixed(2)
+    });
+
+    return (
+      <Card 
+        className="group pattern-hover border-0 shadow-soft bg-card cursor-pointer"
+        onClick={() => navigate(`/product/${product.id}`)}
+      >
+        <CardContent className="p-0">
+          <div className="relative overflow-hidden rounded-lg">
+            <img
+              src={product.imageUrls?.[0] || '/placeholder.svg'}
+              alt={product.productName}
+              className={`w-full object-cover transition-smooth group-hover:scale-110 ${
+                viewMode === 'grid' ? 'h-64' : 'h-32'
+              }`}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-smooth" />
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-smooth">
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="text-white border-white/30 hover:bg-white/20"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Add to cart logic here
+                }}
+              >
+                <ShoppingCart className="h-4 w-4" />
+              </Button>
             </div>
-            {product.stockQuantity && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {product.stockQuantity} in stock
-              </p>
+            {hasDiscount && (
+              <Badge className="absolute top-2 left-2 bg-red-500 text-white">
+                {discountPercentage}% OFF
+              </Badge>
             )}
           </div>
-          {viewMode === 'list' && (
-            <Button 
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                // Add to cart logic here
-              }}
-            >
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Add to Cart
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
+          <div className={`p-4 ${viewMode === 'list' ? 'flex items-center justify-between' : ''}`}>
+            <div className={viewMode === 'list' ? 'flex-1' : ''}>
+              <h3 className="font-semibold text-foreground group-hover:text-primary transition-smooth">
+                {product.productName}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {product.category} • {product.subcategory}
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                {hasDiscount ? (
+                  // Show discounted price with original price crossed out
+                  <>
+                    <span className="font-semibold text-primary">
+                      ${finalPrice.toFixed(2)}
+                    </span>
+                    <span className="text-sm text-muted-foreground line-through">
+                      ${originalPrice.toFixed(2)}
+                    </span>
+                    <span className="text-xs text-green-600 font-medium">
+                      Save ${savingsAmount.toFixed(2)}
+                    </span>
+                  </>
+                ) : (
+                  // Show original price only when no discount
+                  <span className="font-semibold text-primary">
+                    ${originalPrice.toFixed(2)}
+                  </span>
+                )}
+                
+                {/* DEBUG: Show actual values being displayed */}
+                <div style={{ display: 'none' }}>
+                  PRICE DEBUG: finalPrice={finalPrice}, originalPrice={originalPrice}, hasDiscount={hasDiscount}
+                </div>
+              </div>
+              
+              {/* TEMPORARY: Add visible debug info */}
+              <div className="text-xs bg-yellow-100 p-1 mt-1 rounded">
+                DEBUG: Final=${finalPrice} | Original=${originalPrice} | Discount%=${discountPercentage} | HasDiscount={hasDiscount.toString()}
+              </div>
+              {product.stockQuantity && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {product.stockQuantity} in stock
+                </p>
+              )}
+            </div>
+            {viewMode === 'list' && (
+              <div className="flex flex-col items-end gap-2">
+                {hasDiscount && (
+                  <Badge variant="secondary" className="text-xs">
+                    {discountPercentage}% OFF
+                  </Badge>
+                )}
+                <Button 
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Add to cart logic here
+                  }}
+                >
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Add to Cart
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -408,9 +486,62 @@ const Products = () => {
                     ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                     : "space-y-4"
                 }>
-                  {data.content.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
+                  {data.content.map((product, index) => {
+                    // Log all product fields with their values
+                    console.log("📦 Product Data:", {
+                      id: product.id,
+                      productName: product.productName,
+                      productType: product.productType,
+                      category: product.category,
+                      subcategory: product.subcategory,
+                      price: product.price,
+                      discountPrice: product.discountPrice,
+                      availableColors: product.availableColors,
+                      availableSizes: product.availableSizes,
+                      imageUrls: product.imageUrls,
+                      description: product.description,
+                      stockQuantity: product.stockQuantity,
+                      createdAt: product.createdAt,
+                      updatedAt: product.updatedAt
+                    });
+                    
+                    // Log complete product object to see all fields
+                    console.log("🔍 Complete Product Object:", product);
+                    
+                    // Special logging for FIRST CARD ONLY
+                    if (index === 0) {
+                      console.log("🎯 FIRST CARD DETAILED ANALYSIS:");
+                      console.log("Product Name:", product.productName);
+                      console.log("Raw price field:", product.price, typeof product.price);
+                      console.log("Raw discountPrice field:", product.discountPrice, typeof product.discountPrice);
+                      
+                      // Calculate values step by step for first card
+                      const originalPrice = product.price;
+                      const discountPercentage = product.discountPrice || 0;
+                      const hasDiscount = discountPercentage > 0;
+                      const discountAmount = hasDiscount ? (originalPrice * discountPercentage / 100) : 0;
+                      const priceBeforeCeil = hasDiscount ? (originalPrice - discountAmount) : originalPrice;
+                      const finalPrice = Math.ceil(priceBeforeCeil);
+                      const savingsAmount = hasDiscount ? originalPrice - finalPrice : 0;
+                      
+                      console.log("FIRST CARD CALCULATION BREAKDOWN:");
+                      console.log("originalPrice =", originalPrice);
+                      console.log("discountPercentage =", discountPercentage);
+                      console.log("hasDiscount =", hasDiscount);
+                      console.log("discountAmount = originalPrice * discountPercentage / 100 =", originalPrice, "*", discountPercentage, "/ 100 =", discountAmount);
+                      console.log("priceBeforeCeil = originalPrice - discountAmount =", originalPrice, "-", discountAmount, "=", priceBeforeCeil);
+                      console.log("finalPrice = Math.ceil(priceBeforeCeil) =", "Math.ceil(" + priceBeforeCeil + ") =", finalPrice);
+                      console.log("savingsAmount = originalPrice - finalPrice =", originalPrice, "-", finalPrice, "=", savingsAmount);
+                      
+                      console.log("FIRST CARD FINAL VALUES TO DISPLAY:");
+                      console.log("Final Price Display: $" + finalPrice.toFixed(2));
+                      console.log("Original Price Display: $" + originalPrice.toFixed(2));
+                      console.log("Savings Display: Save $" + savingsAmount.toFixed(2));
+                      console.log("Discount Badge: " + discountPercentage + "% OFF");
+                    }
+                    
+                    return <ProductCard key={product.id} product={product} />;
+                  })}
                 </div>
 
                 {/* Pagination */}

@@ -19,7 +19,7 @@ interface Product {
   category: string;
   subcategory: string;
   price: number;
-  discountPrice?: number;
+  discountPrice?: number; // This is discount percentage
   availableColors: string[];
   availableSizes: string[];
   imageUrls: string[];
@@ -65,6 +65,16 @@ const Products = () => {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Price calculation function
+  const calculateFinalPrice = (originalPrice: number, discountPercentage?: number): number => {
+    if (!discountPercentage || discountPercentage <= 0) {
+      return originalPrice;
+    }
+    const discountAmount = originalPrice * (discountPercentage / 100);
+    const finalPrice = originalPrice - discountAmount;
+    return Math.ceil(finalPrice);
+  };
 
   // Fetch all products from API
   const fetchProducts = async () => {
@@ -184,7 +194,7 @@ const Products = () => {
       );
     }
     
-    // Apply sorting
+    // Apply sorting - Updated to use final calculated price
     filtered.sort((a, b) => {
       let aValue: any, bValue: any;
       
@@ -194,8 +204,8 @@ const Products = () => {
           bValue = b.productName;
           break;
         case 'price':
-          aValue = a.discountPrice || a.price;
-          bValue = b.discountPrice || b.price;
+          aValue = calculateFinalPrice(a.price, a.discountPrice);
+          bValue = calculateFinalPrice(b.price, b.discountPrice);
           break;
         case 'createdAt':
         default:
@@ -388,8 +398,46 @@ const Products = () => {
     </div>
   );
 
-  const ProductCard = ({ product }: { product: Product }) => {
+  const ProductCard = ({ product, index }: { product: Product; index: number }) => {
     console.log('🃏 Rendering product card:', product.productName);
+
+    // Calculate pricing - price is original, discountPrice is percentage
+    const originalPrice = product.price;
+    const discountPercentage = product.discountPrice || 0;
+    const hasDiscount = discountPercentage > 0;
+    
+    // Calculate final price only if there's a discount
+    const finalPrice = hasDiscount 
+      ? calculateFinalPrice(originalPrice, discountPercentage)
+      : originalPrice;
+    
+    const savingsAmount = hasDiscount ? originalPrice - finalPrice : 0;
+
+    // Special logging for FIRST CARD ONLY
+    if (index === 0) {
+      console.log("🎯 FIRST CARD DETAILED ANALYSIS:");
+      console.log("Product Name:", product.productName);
+      console.log("Raw price field:", product.price, typeof product.price);
+      console.log("Raw discountPrice field:", product.discountPrice, typeof product.discountPrice);
+      console.log("originalPrice =", originalPrice);
+      console.log("discountPercentage =", discountPercentage);
+      console.log("hasDiscount =", hasDiscount);
+      
+      if (hasDiscount) {
+        const discountAmount = originalPrice * discountPercentage / 100;
+        const priceBeforeCeil = originalPrice - discountAmount;
+        console.log("discountAmount = originalPrice * discountPercentage / 100 =", originalPrice, "*", discountPercentage, "/ 100 =", discountAmount);
+        console.log("priceBeforeCeil = originalPrice - discountAmount =", originalPrice, "-", discountAmount, "=", priceBeforeCeil);
+        console.log("finalPrice = Math.ceil(priceBeforeCeil) =", "Math.ceil(" + priceBeforeCeil + ") =", finalPrice);
+      }
+      
+      console.log("savingsAmount = originalPrice - finalPrice =", originalPrice, "-", finalPrice, "=", savingsAmount);
+      console.log("FIRST CARD FINAL VALUES TO DISPLAY:");
+      console.log("Final Price Display: ₹" + finalPrice.toFixed(2));
+      console.log("Original Price Display: ₹" + originalPrice.toFixed(2));
+      console.log("Savings Display: Save ₹" + savingsAmount.toFixed(2));
+      console.log("Discount Badge: " + discountPercentage + "% OFF");
+    }
 
     return (
       <Card
@@ -411,9 +459,9 @@ const Products = () => {
 
             {/* Product Badges */}
             <div className="absolute top-2 left-2 flex flex-col gap-1">
-              {product.discountPrice && (
+              {hasDiscount && (
                 <Badge className="bg-red-500 text-white">
-                  {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
+                  {discountPercentage}% OFF
                 </Badge>
               )}
               {product.stockQuantity <= 5 && product.stockQuantity > 0 && (
@@ -441,7 +489,7 @@ const Products = () => {
                 }}
                 disabled={product.stockQuantity === 0}
               >
-                {product.stockQuantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+                {/* {product.stockQuantity === 0 ? 'Out of Stock' : 'Add to Cart'} */}
               </Button>
             </div>
           </div>
@@ -462,17 +510,30 @@ const Products = () => {
                 <span>Sizes: {product.availableSizes.join(', ')}</span>
               </div>
 
-              {/* Price */}
+              {/* Price - Updated with correct calculation */}
               <div className="flex items-center gap-2 mt-2">
-                <span className="font-semibold text-primary">
-                  ${product.discountPrice || product.price}
-                </span>
-                {product.discountPrice && (
-                  <span className="text-sm text-muted-foreground line-through">
-                    ${product.price}
+                {hasDiscount ? (
+                  // Show discounted price with original price crossed out
+                  <>
+                    <span className="font-semibold text-primary">
+                      ₹{finalPrice.toFixed(2)}
+                    </span>
+                    <span className="text-sm text-muted-foreground line-through">
+                      ₹{originalPrice.toFixed(2)}
+                    </span>
+                    <span className="text-xs text-green-600 font-medium">
+                      Save ₹{savingsAmount.toFixed(2)}
+                    </span>
+                  </>
+                ) : (
+                  // Show original price only when no discount
+                  <span className="font-semibold text-primary">
+                    ₹{originalPrice.toFixed(2)}
                   </span>
                 )}
               </div>
+
+
 
               {/* Stock Status */}
               <div className="mt-1">
@@ -490,6 +551,11 @@ const Products = () => {
 
             {viewMode === 'list' && (
               <div className="flex flex-col gap-2">
+                {hasDiscount && (
+                  <Badge variant="secondary" className="text-xs">
+                    {discountPercentage}% OFF
+                  </Badge>
+                )}
                 <Button
                   size="sm"
                   onClick={(e) => {
@@ -669,8 +735,8 @@ const Products = () => {
                     ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                     : "space-y-4"
                 }>
-                  {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                  {filteredProducts.map((product, index) => (
+                    <ProductCard key={product.id} product={product} index={index} />
                   ))}
                 </div>
 

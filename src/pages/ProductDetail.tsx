@@ -19,7 +19,7 @@ interface Product {
   category: string;
   subcategory: string;
   price: number;
-  discountPrice?: number;
+  discountPrice?: number; // This is now the discount percentage
   availableColors: string[];
   availableSizes: string[];
   imageUrls: string[];
@@ -58,6 +58,22 @@ const ProductDetail = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Price calculation function
+  const calculateFinalPrice = (originalPrice: number, discountPercentage?: number): number => {
+    if (!discountPercentage || discountPercentage <= 0) {
+      return originalPrice;
+    }
+    const discountAmount = originalPrice * (discountPercentage / 100);
+    const finalPrice = originalPrice - discountAmount;
+    return Math.ceil(finalPrice);
+  };
+
+  // Get final price for display and calculations
+  const getFinalPrice = () => {
+    if (!productData) return 0;
+    return calculateFinalPrice(productData.price, productData.discountPrice);
+  };
+
   // Debug logs
   console.log("🔄 ProductDetail Component Render:", {
     productId,
@@ -67,7 +83,8 @@ const ProductDetail = () => {
     selectedColor,
     selectedSize,
     quantity,
-    orderInitiated
+    orderInitiated,
+    finalPrice: getFinalPrice()
   });
 
   // Fetch product data
@@ -104,6 +121,11 @@ const ProductDetail = () => {
 
         if (result.success && result.data) {
           setProductData(result.data);
+          console.log("💰 Price Calculation:", {
+            originalPrice: result.data.price,
+            discountPercentage: result.data.discountPrice,
+            finalPrice: calculateFinalPrice(result.data.price, result.data.discountPrice)
+          });
         } else {
           throw new Error(result.message || 'Failed to fetch product data');
         }
@@ -219,22 +241,27 @@ const ProductDetail = () => {
       return;
     }
 
+    // Calculate final price using the new logic
+    const finalPrice = getFinalPrice();
+    const totalAmount = finalPrice * quantity;
+
     // Prepare enhanced purchase data with all product details
     const purchaseData = {
       productId: productData.id,
       productName: productData.productName,
-      price: productData.discountPrice || productData.price,
+      price: finalPrice, // Use calculated final price
       quantity: quantity,
       selectedColor: selectedColor,
       selectedSize: selectedSize,
-      totalAmount: (productData.discountPrice || productData.price) * quantity,
+      totalAmount: totalAmount,
       productImage: productData.imageUrls?.[0] || '',
       productType: productData.productType,
       category: productData.category,
       subcategory: productData.subcategory,
       description: productData.description,
       originalPrice: productData.price,
-      discountPrice: productData.discountPrice
+      discountPercentage: productData.discountPrice, // Now stores discount percentage
+      finalPrice: finalPrice // Add final calculated price
     };
 
     try {
@@ -242,7 +269,7 @@ const ProductDetail = () => {
 
       toast({
         title: "Proceeding to payment",
-        description: `${productData.productName} (${quantity}) - Total: ${purchaseData.totalAmount.toFixed(2)}`,
+        description: `${productData.productName} (${quantity}) - Total: ₹${totalAmount.toFixed(2)}`,
       });
 
       // Set order initiated state
@@ -307,9 +334,15 @@ const ProductDetail = () => {
 
   const isOutOfStock = productData.stockQuantity === 0;
   const isLowStock = productData.stockQuantity > 0 && productData.stockQuantity <= 5;
+  const finalPrice = getFinalPrice();
+  const hasDiscount = productData.discountPrice && productData.discountPrice > 0;
 
   console.log("🎨 Rendering product details:", {
     productName: productData.productName,
+    originalPrice: productData.price,
+    discountPercentage: productData.discountPrice,
+    finalPrice: finalPrice,
+    hasDiscount: hasDiscount,
     isOutOfStock,
     isLowStock,
     selectedColor,
@@ -380,15 +413,14 @@ const ProductDetail = () => {
           <div className="space-y-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                {/* {productData.isPremium && (
-                  <Badge className="bg-gradient-primary text-primary-foreground">Premium</Badge>
-                )} */}
+                {hasDiscount && (
+                  <Badge className="bg-red-500 text-white">
+                    {productData.discountPrice}% OFF
+                  </Badge>
+                )}
                 {isLowStock && !isOutOfStock && (
                   <Badge variant="secondary">Low Stock</Badge>
                 )}
-                {/* {productData.isNewArrival && (
-                  <Badge className="bg-accent text-accent-foreground">New Arrival</Badge>
-                )} */}
               </div>
               
               <h1 className="font-display text-3xl font-bold text-foreground mb-2">
@@ -399,22 +431,21 @@ const ProductDetail = () => {
                 <span>{productData.category}</span>
                 <span>•</span>
                 <span>{productData.subcategory}</span>
-                {/* {productData.designedBy && (
-                  <>
-                    <span>•</span>
-                    <span>by {productData.designedBy}</span>
-                  </>
-                )} */}
               </div>
 
               <div className="flex items-center gap-4 mb-6">
                 <span className="text-2xl font-bold text-primary">
-                  ${productData.discountPrice || productData.price}
+                  ₹{finalPrice.toFixed(2)}
                 </span>
-                {productData.discountPrice && (
-                  <span className="text-lg text-muted-foreground line-through">
-                    ${productData.price}
-                  </span>
+                {hasDiscount && (
+                  <>
+                    <span className="text-lg text-muted-foreground line-through">
+                      ₹{productData.price.toFixed(2)}
+                    </span>
+                    <span className="text-sm text-green-600 font-medium">
+                      Save ₹{(productData.price - finalPrice).toFixed(2)}
+                    </span>
+                  </>
                 )}
               </div>
 
@@ -454,7 +485,7 @@ const ProductDetail = () => {
                 disabled={isOutOfStock}
               >
                 <ShoppingBag className="h-4 w-4 mr-2" />
-                {isOutOfStock ? 'Out of Stock' : 'Buy Now'}
+                {isOutOfStock ? 'Out of Stock' : `Buy Now - ₹${(finalPrice * quantity).toFixed(2)}`}
               </Button>
             </div>
 
@@ -499,19 +530,19 @@ const ProductDetail = () => {
                     </p>
                   </div>
                   
-                  {/* {productData.includedFiles && (
-                    <div>
-                      <span className="text-muted-foreground">Included Files:</span>
-                      <p className="font-medium">{productData.includedFiles}</p>
-                    </div>
-                  )} */}
-                  
-                  {/* {productData.licenseType && (
-                    <div>
-                      <span className="text-muted-foreground">License:</span>
-                      <p className="font-medium">{productData.licenseType}</p>
-                    </div>
-                  )} */}
+                  {hasDiscount && (
+                    <>
+                      <div>
+                        <span className="text-muted-foreground">Original Price:</span>
+                        <p className="font-medium">${productData.price.toFixed(2)}</p>
+                      </div>
+                      
+                      <div>
+                        <span className="text-muted-foreground">Discount:</span>
+                        <p className="font-medium text-green-600">{productData.discountPrice}% OFF</p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>

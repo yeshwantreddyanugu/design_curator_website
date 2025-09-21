@@ -35,8 +35,8 @@ const LatestProducts = () => {
       type: 'product',
       productId: product.id,
       title: product.title,
-      price: parseFloat(product.price.replace('From ₹', '')),
-      discountPrice: product.originalPrice ? parseFloat(product.originalPrice.replace('₹', '')) : undefined,
+      price: product.finalPrice,
+      discountPrice: product.discountPercentage,
       image: product.image,
       category: product.category,
       productType: product.productType,
@@ -44,35 +44,6 @@ const LatestProducts = () => {
       availableColors: product.availableColors,
       stockQuantity: product.stockQuantity,
     });
-
-    // try {
-    //   addToCart({
-    //     type: 'product',
-    //     productId: product.id,
-    //     title: product.title,
-    //     price: parseFloat(product.price.replace('From $', '')),
-    //     discountPrice: product.originalPrice ? parseFloat(product.originalPrice.replace('$', '')) : undefined,
-    //     image: product.image,
-    //     category: product.category,
-    //     productType: product.productType,
-    //     availableSizes: product.availableSizes,
-    //     availableColors: product.availableColors,
-    //     stockQuantity: product.stockQuantity,
-    //   });
-
-    //   console.log("Successfully added product to cart");
-    //   toast({
-    //     title: "Added to cart!",
-    //     description: `${product.title} has been added to your cart.`,
-    //   });
-    // } catch (error) {
-    //   console.error("Error adding product to cart:", error);
-    //   toast({
-    //     title: "Error",
-    //     description: "Failed to add product to cart. Please try again.",
-    //     variant: "destructive",
-    //   });
-    // }
   };
 
   const handleViewProduct = (product: any, e: React.MouseEvent) => {
@@ -112,13 +83,23 @@ const LatestProducts = () => {
 
   const latestProducts = latestData?.content?.slice(0, 6).map((product) => {
     console.log("Processing product from API:", product);
+    
+    // Calculate final price based on discount
+    const originalPrice = product.price;
+    const discountPercentage = product.discountPrice || 0;
+    const discountAmount = originalPrice * (discountPercentage / 100);
+    const finalPrice = originalPrice - discountAmount;
+    const hasDiscount = discountPercentage > 0;
+
     return {
       id: product.id,
       title: product.productName,
       category: product.category,
       productType: product.productType,
-      price: product.discountPrice ? `₹${product.discountPrice}` : `₹${product.price}`,
-      originalPrice: product.discountPrice ? `₹${product.price}` : null,
+      originalPrice: originalPrice,
+      finalPrice: Math.ceil(finalPrice), // Round up the final price
+      discountPercentage: discountPercentage,
+      hasDiscount: hasDiscount,
       image: product.imageUrls?.[0] || patternGrid,
       stockQuantity: product.stockQuantity,
       availableSizes: product.availableSizes || [],
@@ -129,7 +110,9 @@ const LatestProducts = () => {
         title: "Tropical Print T-Shirts",
         category: "Apparel",
         productType: "CLOTHES",
-        price: "From ₹29.99",
+        originalPrice: 29.99,
+        finalPrice: 29.99,
+        hasDiscount: false,
         image: patternGrid,
         stockQuantity: 15
       },
@@ -137,7 +120,9 @@ const LatestProducts = () => {
         title: "Designer Sneakers",
         category: "Footwear",
         productType: "SHOES",
-        price: "From ₹89.99",
+        originalPrice: 89.99,
+        finalPrice: 89.99,
+        hasDiscount: false,
         image: patternGrid,
         stockQuantity: 8
       },
@@ -145,7 +130,9 @@ const LatestProducts = () => {
         title: "Pattern Dresses",
         category: "Womenswear",
         productType: "CLOTHES",
-        price: "From ₹59.99",
+        originalPrice: 59.99,
+        finalPrice: 59.99,
+        hasDiscount: false,
         image: patternGrid,
         stockQuantity: 12
       },
@@ -153,7 +140,9 @@ const LatestProducts = () => {
         title: "Casual Joggers",
         category: "Activewear",
         productType: "CLOTHES",
-        price: "From ₹39.99",
+        originalPrice: 39.99,
+        finalPrice: 39.99,
+        hasDiscount: false,
         image: patternGrid,
         stockQuantity: 20
       },
@@ -161,7 +150,9 @@ const LatestProducts = () => {
         title: "Print Accessories",
         category: "Accessories",
         productType: "CLOTHES",
-        price: "From ₹19.99",
+        originalPrice: 19.99,
+        finalPrice: 19.99,
+        hasDiscount: false,
         image: patternGrid,
         stockQuantity: 25
       },
@@ -169,7 +160,9 @@ const LatestProducts = () => {
         title: "Designer Jackets",
         category: "Outerwear",
         productType: "CLOTHES",
-        price: "From ₹129.99",
+        originalPrice: 129.99,
+        finalPrice: 129.99,
+        hasDiscount: false,
         image: patternGrid,
         stockQuantity: 5
       }
@@ -259,6 +252,11 @@ const LatestProducts = () => {
                         >
                           {product.productType}
                         </Badge>
+                        {product.hasDiscount && (
+                          <Badge className="bg-green-100 text-green-800">
+                            {product.discountPercentage}% OFF
+                          </Badge>
+                        )}
                         {product.stockQuantity && product.stockQuantity < 10 && (
                           <Badge variant="destructive">
                             Low Stock
@@ -301,11 +299,11 @@ const LatestProducts = () => {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <p className="text-primary font-semibold">
-                            {product.price}
+                            ₹{product.finalPrice}
                           </p>
-                          {product.originalPrice && (
+                          {product.hasDiscount && (
                             <p className="text-muted-foreground text-sm line-through">
-                              {product.originalPrice}
+                              ₹{product.originalPrice}
                             </p>
                           )}
                         </div>
@@ -315,25 +313,6 @@ const LatestProducts = () => {
                           </span>
                         )}
                       </div>
-
-                      {/* <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          className="flex-1"
-                          onClick={(e) => handleQuickAdd(product, e)}
-                          disabled={!product.stockQuantity || product.stockQuantity === 0}
-                        >
-                          <ShoppingCart className="h-4 w-4 mr-1" />
-                          Add to Cart
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => handleViewProduct(product, e)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </div> */}
                     </div>
                   </CardContent>
                 </Card>

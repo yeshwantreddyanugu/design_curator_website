@@ -52,7 +52,7 @@ const Orders = () => {
     setIsLoading(true);
     try {
       // Try to fetch from backend
-      const response = await fetch(`https://az.lytortech.com/api/orders/user/${user.uid}`, {
+      const response = await fetch(`https://963392021b17.ngrok-free.app/api/orders/user/${user.uid}`, {
         headers: {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true',
