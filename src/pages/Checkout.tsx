@@ -127,7 +127,7 @@ const Checkout = () => {
   });
 
   // Base API URL
-  const API_BASE_URL = 'https://963392021b17.ngrok-free.app/api';
+  const API_BASE_URL = 'https://az.lytortech.com/api';
 
   // Razorpay key
   const RAZORPAY_KEY = 'rzp_live_fN6UZTO4YZyRd4';
