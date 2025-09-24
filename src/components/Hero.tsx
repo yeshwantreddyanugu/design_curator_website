@@ -124,7 +124,7 @@ const Hero = () => {
       <div className="relative z-10 h-full flex items-center justify-center text-center">
         <div className="max-w-4xl mx-auto px-4">
           <div className="mb-4">
-            <span className="text-white/90 text-lg font-medium tracking-wider">
+            <span className="text-white/90 text-2xl font-medium tracking-wider">
               - {bannerData.discountText || "Trending"} -
             </span>
           </div>

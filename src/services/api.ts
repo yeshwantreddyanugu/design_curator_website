@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Design, PaginatedDesigns, ApiParams } from '@/types/design';
 
-const API_BASE_URL = 'https://26dec8370623.ngrok-free.app/api';
+const API_BASE_URL = 'https://az.lytortech.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -250,8 +250,8 @@ const DesignDetail = () => {
                   <div
                     key={index}
                     className={`aspect-square overflow-hidden rounded-lg border-2 cursor-pointer select-none transition-all ${selectedImageIndex === index
-                        ? 'border-primary ring-2 ring-primary/20'
-                        : 'border-border hover:border-primary/50'
+                      ? 'border-primary ring-2 ring-primary/20'
+                      : 'border-border hover:border-primary/50'
                       }`}
                     onClick={() => setSelectedImageIndex(index)}
                     onContextMenu={(e) => { e.preventDefault(); return false; }}
@@ -426,40 +426,55 @@ const DesignDetail = () => {
       </main>
 
       {/* Custom Image Modal with Thumbnail Navigation */}
+      {/* Custom Image Modal with Thumbnail Navigation Below */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
-          <div className="relative max-w-6xl max-h-[90vh] w-full mx-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          onClick={handleImageModalClose}
+        >
+          <div
+            className="relative max-w-6xl w-full mx-4 flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Close Button */}
             <button
               onClick={handleImageModalClose}
-              className="absolute top-4 right-4 z-10 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+              className="absolute -top-16 right-0 z-10 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
               aria-label="Close modal"
             >
               <X className="h-6 w-6" />
             </button>
 
-            {/* Navigation Buttons */}
-            {hasMultipleImages && (
-              <>
-                <button
-                  onClick={goToPreviousImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
-                  aria-label="Previous image"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-                <button
-                  onClick={goToNextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
-                  aria-label="Next image"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-              </>
-            )}
+            {/* Main Image Container */}
+            <div className="relative w-full flex justify-center mb-4">
+              {/* Navigation Buttons */}
+              {hasMultipleImages && (
+                <>
+                  <button
+                    onClick={goToPreviousImage}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={goToNextImage}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </>
+              )}
 
-            {/* Main Image */}
-            <div className="flex items-center justify-center h-full">
+              {/* Image Counter */}
+              {hasMultipleImages && (
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full text-sm">
+                  {selectedImageIndex + 1} / {design.imageUrls.length}
+                </div>
+              )}
+
+              {/* Main Image */}
               <img
                 src={design.imageUrls?.[selectedImageIndex] || '/placeholder.svg'}
                 alt={`${design.designName} ${selectedImageIndex + 1}`}
@@ -469,26 +484,18 @@ const DesignDetail = () => {
               />
             </div>
 
-            {/* Image Counter */}
+            {/* Thumbnail Navigation - Now below the main image */}
             {hasMultipleImages && (
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full text-sm">
-                {selectedImageIndex + 1} / {design.imageUrls.length}
-              </div>
-            )}
-
-            {/* Thumbnail Navigation */}
-            {hasMultipleImages && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm rounded-lg p-4">
-                <div className="flex gap-2 max-w-md overflow-x-auto pb-2">
+              <div className="bg-black/50 backdrop-blur-sm rounded-lg p-4 w-full max-w-2xl">
+                <div className="flex gap-2 overflow-x-auto justify-center pb-2">
                   {design.imageUrls.map((url, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
-                      className={`flex-shrink-0 w-16 h-16 rounded border-2 transition-all ${
-                        selectedImageIndex === index
+                      className={`flex-shrink-0 w-16 h-16 rounded border-2 transition-all ${selectedImageIndex === index
                           ? 'border-primary ring-2 ring-primary/50 scale-110'
                           : 'border-gray-300 hover:border-primary/50'
-                      }`}
+                        }`}
                     >
                       <img
                         src={url}
