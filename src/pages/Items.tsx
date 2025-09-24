@@ -138,14 +138,29 @@ const Items = () => {
       }
 
       // Category filtering (new logic)
+      // Replace the existing category filtering logic (around line 125-135) with this:
+
+      // Category filtering (fixed logic)
       let passesCategoryFilter = true;
       if (category && category !== 'all') {
         const designCategory = (design.category || '').toLowerCase();
         const selectedCategoryLower = category.toLowerCase();
-        
-        // Check if the selected category matches the design category
-        passesCategoryFilter = designCategory.includes(selectedCategoryLower) || 
-                              selectedCategoryLower.includes(designCategory);
+
+        // Split design category into individual words and check for exact matches
+        const categoryWords = designCategory.split(/[\s,/]+/).filter(word => word.length > 0);
+
+        // Check if any word in the design category exactly matches the selected category
+        passesCategoryFilter = categoryWords.some(word =>
+          word === selectedCategoryLower ||
+          (selectedCategoryLower === 'menswear' && word === 'menswear') ||
+          (selectedCategoryLower === 'womenswear' && word === 'womenswear') ||
+          (selectedCategoryLower === 'kidswear' && word === 'kidswear') ||
+          (selectedCategoryLower === 'swimwear' && word === 'swimwear') ||
+          (selectedCategoryLower === 'activewear' && word === 'activewear') ||
+          (selectedCategoryLower === 'giftware/stationery' && (word === 'giftware' || word === 'stationery')) ||
+          (selectedCategoryLower === 'interiors/home' && (word === 'interiors' || word === 'home')) ||
+          (selectedCategoryLower === 'archive' && word === 'archive')
+        );
       }
 
       // Subcategory filtering
@@ -154,14 +169,14 @@ const Items = () => {
         const designCategory = (design.category || '').toLowerCase();
         const designSubcategory = (design.subcategory || '').toLowerCase();
         const selectedSubcategoryLower = subcategory.toLowerCase();
-        
+
         // Check if the selected subcategory matches any word in category or subcategory
         const categoryWords = designCategory.split(/[\s,]+/).filter(word => word.length > 0);
         const subcategoryWords = designSubcategory.split(/[\s,]+/).filter(word => word.length > 0);
         const allWords = [...categoryWords, ...subcategoryWords];
-        
-        passesSubcategoryFilter = allWords.some(word => 
-          word.includes(selectedSubcategoryLower) || 
+
+        passesSubcategoryFilter = allWords.some(word =>
+          word.includes(selectedSubcategoryLower) ||
           selectedSubcategoryLower.includes(word)
         );
       }
@@ -204,12 +219,12 @@ const Items = () => {
   // Handle main category selection
   const handleCategoryChange = (selectedCategory: string) => {
     if (selectedCategory === 'all') {
-      updateFilters({ 
+      updateFilters({
         category: undefined,
         subcategory: undefined
       });
     } else {
-      updateFilters({ 
+      updateFilters({
         category: selectedCategory,
         subcategory: undefined, // Clear subcategory when category changes
         search: undefined,
@@ -223,11 +238,11 @@ const Items = () => {
   // Handle subcategory selection
   const handleSubcategoryChange = (selectedSubcategory: string) => {
     if (selectedSubcategory === 'all') {
-      updateFilters({ 
+      updateFilters({
         subcategory: undefined
       });
     } else {
-      updateFilters({ 
+      updateFilters({
         subcategory: selectedSubcategory
       });
     }
@@ -332,8 +347,8 @@ const Items = () => {
 
       <div>
         <h3 className="font-semibold mb-3">Main Categories</h3>
-        <Select 
-          value={category || 'all'} 
+        <Select
+          value={category || 'all'}
           onValueChange={handleCategoryChange}
         >
           <SelectTrigger>
@@ -360,8 +375,8 @@ const Items = () => {
             </span>
           )}
         </h3>
-        <Select 
-          value={subcategory || 'all'} 
+        <Select
+          value={subcategory || 'all'}
           onValueChange={handleSubcategoryChange}
         >
           <SelectTrigger>

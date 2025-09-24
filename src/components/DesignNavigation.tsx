@@ -57,43 +57,137 @@ const DesignNavigation = ({ isOpen, onClose, onNavigate }: DesignNavigationProps
   // Check if mobile view
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobileView(window.innerWidth < 1024); // lg breakpoint
+      const wasMobile = isMobileView;
+      const nowMobile = window.innerWidth < 1024;
+      setIsMobileView(nowMobile);
+      
+      if (wasMobile !== nowMobile) {
+        console.log('🔄 DesignNavigation: View mode changed:', {
+          from: wasMobile ? 'mobile' : 'desktop',
+          to: nowMobile ? 'mobile' : 'desktop',
+          windowWidth: window.innerWidth,
+          breakpoint: 1024
+        });
+      }
     };
     
     checkMobile();
     window.addEventListener('resize', checkMobile);
     
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  }, [isMobileView]);
+
+  // Log when navigation opens/closes
+  useEffect(() => {
+    console.log('🎯 DesignNavigation: Visibility changed:', {
+      isOpen,
+      selectedCategory,
+      isMobileView,
+      mobileCategoryOpen
+    });
+  }, [isOpen]);
 
   const handleCategoryClick = (categoryName: string) => {
+    console.log('👆 DesignNavigation: Category clicked (expand/collapse):', {
+      categoryName,
+      isMobileView,
+      previouslyOpen: mobileCategoryOpen,
+      action: isMobileView ? 'toggle_mobile_accordion' : 'set_desktop_selection'
+    });
+
     if (isMobileView) {
-      setMobileCategoryOpen(mobileCategoryOpen === categoryName ? null : categoryName);
+      const newState = mobileCategoryOpen === categoryName ? null : categoryName;
+      setMobileCategoryOpen(newState);
+      console.log('📱 DesignNavigation: Mobile accordion state changed:', {
+        categoryName,
+        previousState: mobileCategoryOpen,
+        newState,
+        action: newState ? 'opened' : 'closed'
+      });
     } else {
       setSelectedCategory(categoryName);
+      console.log('🖥️ DesignNavigation: Desktop category selected:', {
+        categoryName,
+        previousCategory: selectedCategory,
+        subcategoriesAvailable: designCategories.find(cat => cat.name === categoryName)?.subcategories.length || 0
+      });
     }
   };
 
   // Handle direct category navigation (new functionality)
   const handleCategoryNavigation = (categoryName: string) => {
+    console.log('🚀 DesignNavigation: Category navigation triggered:', {
+      categoryName,
+      isAllDesigns: categoryName === "All Designs",
+      willCallOnNavigate: !!onNavigate,
+      currentView: isMobileView ? 'mobile' : 'desktop'
+    });
+
     if (onNavigate) {
       const category = categoryName === "All Designs" ? undefined : categoryName;
+      console.log('📡 DesignNavigation: Calling onNavigate for category:', {
+        originalCategoryName: categoryName,
+        processedCategory: category,
+        subcategory: undefined,
+        navigationParams: { category, subcategory: undefined }
+      });
+      
       onNavigate(category, undefined); // Navigate with category only, no subcategory
+    } else {
+      console.warn('⚠️ DesignNavigation: onNavigate callback not provided!');
     }
+    
+    console.log('🔒 DesignNavigation: Closing navigation after category selection');
     onClose();
   };
 
   const handleSubcategoryClick = (categoryName: string, subcategory: string) => {
+    console.log('🎯 DesignNavigation: Subcategory clicked:', {
+      categoryName,
+      subcategory,
+      isAllDesigns: categoryName === "All Designs",
+      willCallOnNavigate: !!onNavigate,
+      currentView: isMobileView ? 'mobile' : 'desktop'
+    });
+
     if (onNavigate) {
       const category = categoryName === "All Designs" ? undefined : categoryName;
+      console.log('📡 DesignNavigation: Calling onNavigate for subcategory:', {
+        originalCategoryName: categoryName,
+        processedCategory: category,
+        originalSubcategory: subcategory,
+        navigationParams: { category, subcategory }
+      });
+      
       onNavigate(category, subcategory);
+    } else {
+      console.warn('⚠️ DesignNavigation: onNavigate callback not provided for subcategory!');
     }
+    
+    console.log('🔒 DesignNavigation: Closing navigation after subcategory selection');
     onClose();
   };
+
+  // Log when selectedCategory changes
+  useEffect(() => {
+    console.log('🔄 DesignNavigation: Selected category changed:', {
+      newCategory: selectedCategory,
+      subcategoriesCount: designCategories.find(cat => cat.name === selectedCategory)?.subcategories.length || 0,
+      subcategories: designCategories.find(cat => cat.name === selectedCategory)?.subcategories || []
+    });
+  }, [selectedCategory]);
 
   if (!isOpen) return null;
 
   const currentCategory = designCategories.find(cat => cat.name === selectedCategory);
+
+  console.log('🎨 DesignNavigation: Rendering with state:', {
+    isOpen,
+    selectedCategory,
+    isMobileView,
+    mobileCategoryOpen,
+    currentCategorySubcategories: currentCategory?.subcategories.length || 0
+  });
 
   return (
     <div className="absolute top-full left-0 right-0 bg-background border-b shadow-elegant z-40 max-h-[80vh] overflow-hidden">
@@ -103,7 +197,10 @@ const DesignNavigation = ({ isOpen, onClose, onNavigate }: DesignNavigationProps
           <Button
             variant="ghost"
             size="icon"
-            onClick={onClose}
+            onClick={() => {
+              console.log('❌ DesignNavigation: Mobile close button clicked');
+              onClose();
+            }}
             className="h-8 w-8"
           >
             <X className="h-4 w-4" />
@@ -125,13 +222,19 @@ const DesignNavigation = ({ isOpen, onClose, onNavigate }: DesignNavigationProps
                         <div className="flex">
                           <button
                             className="flex-1 text-left px-4 py-3 font-medium hover:bg-muted/50 transition-colors"
-                            onClick={() => handleCategoryNavigation(category.name)}
+                            onClick={() => {
+                              console.log('📱 DesignNavigation: Mobile category navigation button clicked:', category.name);
+                              handleCategoryNavigation(category.name);
+                            }}
                           >
                             {category.name}
                           </button>
                           <button
                             className="px-4 py-3 hover:bg-muted/50 transition-colors border-l"
-                            onClick={() => handleCategoryClick(category.name)}
+                            onClick={() => {
+                              console.log('📱 DesignNavigation: Mobile accordion toggle clicked:', category.name);
+                              handleCategoryClick(category.name);
+                            }}
                           >
                             <ChevronDown 
                               className={`h-4 w-4 transition-transform ${
@@ -152,7 +255,13 @@ const DesignNavigation = ({ isOpen, onClose, onNavigate }: DesignNavigationProps
                               <button
                                 key={subcategory}
                                 className="text-left p-2 rounded-md hover:bg-muted/50 transition-smooth text-sm"
-                                onClick={() => handleSubcategoryClick(category.name, subcategory)}
+                                onClick={() => {
+                                  console.log('📱 DesignNavigation: Mobile subcategory clicked:', {
+                                    category: category.name,
+                                    subcategory
+                                  });
+                                  handleSubcategoryClick(category.name, subcategory);
+                                }}
                               >
                                 {subcategory}
                               </button>
@@ -179,8 +288,14 @@ const DesignNavigation = ({ isOpen, onClose, onNavigate }: DesignNavigationProps
                                 ? "bg-primary text-primary-foreground"
                                 : "hover:bg-muted text-foreground"
                             }`}
-                            onMouseEnter={() => setSelectedCategory(category.name)}
-                            onClick={() => handleCategoryNavigation(category.name)}
+                            onMouseEnter={() => {
+                              console.log('🖥️ DesignNavigation: Desktop category hover:', category.name);
+                              setSelectedCategory(category.name);
+                            }}
+                            onClick={() => {
+                              console.log('🖥️ DesignNavigation: Desktop category main button clicked:', category.name);
+                              handleCategoryNavigation(category.name);
+                            }}
                           >
                             <span className="font-medium flex-1">{category.name}</span>
                           </button>
@@ -190,7 +305,10 @@ const DesignNavigation = ({ isOpen, onClose, onNavigate }: DesignNavigationProps
                                 ? "bg-primary/90 text-primary-foreground border-primary-foreground/20"
                                 : "hover:bg-muted text-foreground border-border"
                             }`}
-                            onMouseEnter={() => setSelectedCategory(category.name)}
+                            onMouseEnter={() => {
+                              console.log('🖥️ DesignNavigation: Desktop category arrow hover:', category.name);
+                              setSelectedCategory(category.name);
+                            }}
                           >
                             <ChevronRight className="h-4 w-4 opacity-60" />
                           </button>
@@ -207,7 +325,10 @@ const DesignNavigation = ({ isOpen, onClose, onNavigate }: DesignNavigationProps
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleCategoryNavigation(selectedCategory)}
+                      onClick={() => {
+                        console.log('🖥️ DesignNavigation: Desktop "View all" button clicked:', selectedCategory);
+                        handleCategoryNavigation(selectedCategory);
+                      }}
                       className="text-xs"
                     >
                       View all {selectedCategory}
@@ -225,7 +346,13 @@ const DesignNavigation = ({ isOpen, onClose, onNavigate }: DesignNavigationProps
                       <button
                         key={subcategory}
                         className="text-left p-3 rounded-lg hover:bg-muted/50 transition-smooth text-foreground hover:text-primary border border-transparent hover:border-primary/20"
-                        onClick={() => handleSubcategoryClick(selectedCategory, subcategory)}
+                        onClick={() => {
+                          console.log('🖥️ DesignNavigation: Desktop subcategory clicked:', {
+                            category: selectedCategory,
+                            subcategory
+                          });
+                          handleSubcategoryClick(selectedCategory, subcategory);
+                        }}
                       >
                         {subcategory}
                       </button>
