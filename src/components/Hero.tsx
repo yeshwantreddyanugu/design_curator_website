@@ -1,25 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -111,25 +89,23 @@ const Hero = () => {
 
   return (
     <section className="relative h-[70vh] min-h-[600px] overflow-hidden">
-      {/* Background Image */}
+      {/* Background Image - No gradient overlay */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${bannerData.bannerImage})` }}
-      >
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 gradient-hero" />
-      </div>
+      />
 
       {/* Content */}
       <div className="relative z-10 h-full flex items-center justify-center text-center">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="mb-4">
-            <span className="text-white/90 text-2xl font-medium tracking-wider">
-              - {bannerData.discountText || "Trending"} -
+          {/* Larger Discount Text */}
+          <div className="mb-6">
+            <span className="text-white text-4xl md:text-5xl font-bold tracking-wider drop-shadow-2xl">
+              {bannerData.discountText || "BIG SALE"}
             </span>
           </div>
 
-          <h1 className="font-display text-5xl md:text-7xl font-bold text-white mb-8 leading-tight">
+          <h1 className="font-display text-5xl md:text-7xl font-bold text-white mb-8 leading-tight drop-shadow-2xl">
             {bannerData.text || "Tropical Haze"}
           </h1>
 
@@ -144,8 +120,7 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* Decorative Elements */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background/20 to-transparent" />
+      {/* Remove decorative gradient at bottom */}
     </section>
   );
 };
