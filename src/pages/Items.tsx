@@ -125,20 +125,21 @@ const Items = () => {
   const data = rawData ? {
     ...rawData,
     content: rawData.content.filter((design: any) => {
-      // Color filtering
+      // Color filtering - Fixed logic
       let passesColorFilter = true;
       if (selectedColors.length > 0) {
         if (design.availableColors && Array.isArray(design.availableColors)) {
-          passesColorFilter = design.availableColors.some((color: string) =>
-            selectedColors.includes(color)
+          // Check if any selected color matches any available color
+          passesColorFilter = selectedColors.some(selectedColor =>
+            design.availableColors.some((availableColor: string) =>
+              availableColor.toLowerCase().includes(selectedColor.toLowerCase()) ||
+              selectedColor.toLowerCase().includes(availableColor.toLowerCase())
+            )
           );
         } else {
           passesColorFilter = false;
         }
       }
-
-      // Category filtering (new logic)
-      // Replace the existing category filtering logic (around line 125-135) with this:
 
       // Category filtering (fixed logic)
       let passesCategoryFilter = true;
@@ -248,7 +249,7 @@ const Items = () => {
     }
   };
 
-  // Handle color filter changes
+  // Handle color filter changes - Fixed
   const handleColorChange = (color: string, checked: boolean) => {
     let newColors: string[];
     if (checked) {
@@ -320,6 +321,7 @@ const Items = () => {
     return colorMap[color] || color.toLowerCase();
   };
 
+  // Updated FilterPanel component with removed badges
   const FilterPanel = () => (
     <div className="space-y-6">
       <div>
@@ -345,59 +347,131 @@ const Items = () => {
 
       <Separator />
 
+      {/* Main Categories - Radio Options */}
       <div>
-        <h3 className="font-semibold mb-3">Main Categories</h3>
-        <Select
-          value={category || 'all'}
-          onValueChange={handleCategoryChange}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select main category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {mainCategories.filter(cat => cat !== 'All Designs').map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {cat}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Subcategories - only show when a main category is selected or independently */}
-      <div>
-        <h3 className="font-semibold mb-3">
-          Subcategories
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold">Main Categories</h3>
           {category && (
-            <span className="text-sm font-normal text-muted-foreground ml-1">
-              (within {category})
-            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleCategoryChange('all')}
+              className="text-xs text-muted-foreground hover:text-foreground h-6 px-2"
+            >
+              Clear
+            </Button>
           )}
-        </h3>
-        <Select
-          value={subcategory || 'all'}
-          onValueChange={handleSubcategoryChange}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select subcategory" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Subcategories</SelectItem>
-            {allSubcategories.map((subcat) => (
-              <SelectItem key={subcat} value={subcat}>
-                {subcat}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        </div>
+
+        <div className="space-y-2 max-h-64 overflow-y-auto scrollbar-thin">
+          <div className="flex items-center space-x-2">
+            <input
+              type="radio"
+              id="category-all"
+              name="category"
+              checked={!category || category === 'all'}
+              onChange={() => handleCategoryChange('all')}
+              className="text-primary focus:ring-primary"
+            />
+            <label
+              htmlFor="category-all"
+              className="text-sm cursor-pointer flex-1 hover:text-primary transition-colors font-medium"
+            >
+              All Categories
+            </label>
+          </div>
+
+          {mainCategories.filter(cat => cat !== 'All Designs').map((cat) => (
+            <div key={cat} className="flex items-center space-x-2">
+              <input
+                type="radio"
+                id={`category-${cat}`}
+                name="category"
+                checked={category === cat}
+                onChange={() => handleCategoryChange(cat)}
+                className="text-primary focus:ring-primary"
+              />
+              <label
+                htmlFor={`category-${cat}`}
+                className="text-sm cursor-pointer flex-1 hover:text-primary transition-colors"
+              >
+                {cat}
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
 
       <Separator />
 
+      {/* Subcategories - Radio Options */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold">
+            Subcategories
+            {category && category !== 'all' && (
+              <span className="text-sm font-normal text-muted-foreground ml-1">
+                (within {category})
+              </span>
+            )}
+          </h3>
+          {subcategory && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleSubcategoryChange('all')}
+              className="text-xs text-muted-foreground hover:text-foreground h-6 px-2"
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+
+        <div className="space-y-2 max-h-64 overflow-y-auto scrollbar-thin">
+          <div className="flex items-center space-x-2">
+            <input
+              type="radio"
+              id="subcategory-all"
+              name="subcategory"
+              checked={!subcategory || subcategory === 'all'}
+              onChange={() => handleSubcategoryChange('all')}
+              className="text-primary focus:ring-primary"
+            />
+            <label
+              htmlFor="subcategory-all"
+              className="text-sm cursor-pointer flex-1 hover:text-primary transition-colors font-medium"
+            >
+              All Subcategories
+            </label>
+          </div>
+
+          {allSubcategories.map((subcat) => (
+            <div key={subcat} className="flex items-center space-x-2">
+              <input
+                type="radio"
+                id={`subcategory-${subcat}`}
+                name="subcategory"
+                checked={subcategory === subcat}
+                onChange={() => handleSubcategoryChange(subcat)}
+                className="text-primary focus:ring-primary"
+              />
+              <label
+                htmlFor={`subcategory-${subcat}`}
+                className="text-sm cursor-pointer flex-1 hover:text-primary transition-colors"
+              >
+                {subcat}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Quick Filters - Removed badges */}
       <div>
         <h3 className="font-semibold mb-3">Quick Filters</h3>
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center space-x-2">
             <Checkbox
               id="premium"
@@ -405,8 +479,11 @@ const Items = () => {
               onCheckedChange={(checked) =>
                 updateFilters({ premium: checked ? 'true' : undefined })
               }
+              className="text-primary"
             />
-            <label htmlFor="premium" className="text-sm cursor-pointer">Premium Designs</label>
+            <label htmlFor="premium" className="text-sm cursor-pointer">
+              Premium Designs
+            </label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -415,8 +492,11 @@ const Items = () => {
               onCheckedChange={(checked) =>
                 updateFilters({ trending: checked ? 'true' : undefined })
               }
+              className="text-primary"
             />
-            <label htmlFor="trending" className="text-sm cursor-pointer">Trending</label>
+            <label htmlFor="trending" className="text-sm cursor-pointer">
+              Trending
+            </label>
           </div>
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -425,22 +505,42 @@ const Items = () => {
               onCheckedChange={(checked) =>
                 updateFilters({ new: checked ? 'true' : undefined })
               }
+              className="text-primary"
             />
-            <label htmlFor="new" className="text-sm cursor-pointer">New Arrivals</label>
+            <label htmlFor="new" className="text-sm cursor-pointer">
+              New Arrivals
+            </label>
           </div>
         </div>
       </div>
 
       <Separator />
 
+      {/* Colors - Fixed functionality */}
       <div>
-        <h3 className="font-semibold mb-3">Colors</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold">Colors</h3>
+          {selectedColors.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedColors([]);
+                updateFilters({ colors: undefined });
+              }}
+              className="text-xs text-muted-foreground hover:text-foreground h-6 px-2"
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+
         <div className="grid grid-cols-4 gap-2">
           {availableColors.map((color) => (
             <button
               key={color}
-              className={`h-8 w-8 rounded-full border-2 transition-all duration-200 hover:scale-105 ${selectedColors.includes(color)
-                ? 'border-primary ring-2 ring-primary/20 scale-110'
+              className={`h-10 w-10 rounded-lg border-2 transition-all duration-200 hover:scale-105 flex items-center justify-center relative ${selectedColors.includes(color)
+                ? 'border-primary ring-2 ring-primary/20 scale-105'
                 : 'border-gray-300 hover:border-primary/50'
                 } ${color === 'White' ? 'shadow-md' : ''}`}
               style={{ backgroundColor: getColorStyle(color) }}
@@ -449,26 +549,38 @@ const Items = () => {
               aria-label={`Filter by ${color} color`}
             >
               {selectedColors.includes(color) && (
-                <div className="w-full h-full rounded-full flex items-center justify-center">
-                  <div className={`w-2 h-2 rounded-full ${color === 'White' || color === 'Yellow' ? 'bg-gray-600' : 'bg-white'
-                    }`} />
+                <div className="absolute inset-0 rounded-lg flex items-center justify-center">
+                  <div className={`w-3 h-3 rounded-full ${color === 'White' || color === 'Yellow' ? 'bg-gray-700' : 'bg-white'
+                    } shadow-sm`} />
                 </div>
               )}
             </button>
           ))}
         </div>
+
+        {/* Selected colors display */}
         {selectedColors.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setSelectedColors([]);
-              updateFilters({ colors: undefined });
-            }}
-            className="mt-2 text-xs text-muted-foreground hover:text-foreground"
-          >
-            Clear colors
-          </Button>
+          <div className="mt-3">
+            <div className="text-xs text-muted-foreground mb-2">Selected colors:</div>
+            <div className="flex flex-wrap gap-1">
+              {selectedColors.map((color) => (
+                <div
+                  key={color}
+                  className="flex items-center gap-1 bg-muted rounded-full px-2 py-1 text-xs"
+                >
+                  <div
+                    className="w-3 h-3 rounded-full border border-gray-300"
+                    style={{ backgroundColor: getColorStyle(color) }}
+                  />
+                  {color}
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-destructive ml-1"
+                    onClick={() => handleColorChange(color, false)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -640,10 +752,18 @@ const Items = () => {
 
                 {data && (
                   <span className="text-sm text-muted-foreground">
-                    {selectedColors.length > 0 && data.content.length !== rawData?.totalElements
-                      ? `${data.content.length} of ${rawData?.totalElements} designs found`
-                      : `${rawData?.totalElements || data.content.length} designs found`
-                    }
+                    {/* Show filtered count vs total when filters are applied */}
+                    {(category && category !== 'all') ||
+                      (subcategory && subcategory !== 'all') ||
+                      selectedColors.length > 0 ||
+                      isPremium ||
+                      isTrending ||
+                      isNewArrival ||
+                      search ? (
+                      `${data.content.length} of ${rawData?.totalElements || 0} designs found`
+                    ) : (
+                      `${rawData?.totalElements || data.content.length} designs found`
+                    )}
                   </span>
                 )}
               </div>

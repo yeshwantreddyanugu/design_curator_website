@@ -4,10 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, FileImage, Palette, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShoppingCart, FileImage, Palette, ChevronLeft, ChevronRight, X } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import ImageModal from "@/components/ImageModal";
 import AuthModal from "@/components/auth/AuthModal";
 import { designApi } from "@/services/api";
 import { useQuery } from "@tanstack/react-query";
@@ -78,9 +77,9 @@ const DesignDetail = () => {
 
     // Prepare cart data
     const cartData = {
-      type: 'design' as const, // Fix type to be literal type instead of string
-      designId: design.id, // This is the actual design ID from backend
-      productId: design.id, // Same as designId for designs
+      type: 'design' as const,
+      designId: design.id,
+      productId: design.id,
       title: design.designName,
       price: parseFloat(String(design.price)),
       discountPrice: design.discountPrice,
@@ -100,7 +99,6 @@ const DesignDetail = () => {
       weight: '',
       dimensions: '',
       careInstructions: '',
-      // Additional design-specific fields that might be needed
       fileSizePx: design.fileSizePx,
       fileSizeCm: design.fileSizeCm,
       dpi: design.dpi,
@@ -111,29 +109,6 @@ const DesignDetail = () => {
     console.log("=== CART DATA ANALYSIS ===");
     console.log("Cart data being sent:");
     console.log(JSON.stringify(cartData, null, 2));
-
-    console.log("=== ID FIELD ANALYSIS ===");
-    console.log("design.id (from API):", design.id, typeof design.id);
-    console.log("designId (from URL params):", designId, typeof designId);
-    console.log("cartData.designId:", cartData.designId, typeof cartData.designId);
-    console.log("cartData.productId:", cartData.productId, typeof cartData.productId);
-
-    console.log("=== PRICE ANALYSIS ===");
-    console.log("Original price:", design.price, typeof design.price);
-    console.log("Discount price/percentage:", design.discountPrice, typeof design.discountPrice);
-    console.log("Parsed price for cart:", cartData.price, typeof cartData.price);
-    console.log("Discount price for cart:", cartData.discountPrice, typeof cartData.discountPrice);
-
-    console.log("=== OTHER IMPORTANT FIELDS ===");
-    console.log("Design name:", design.designName);
-    console.log("Category:", design.category);
-    console.log("Subcategory:", design.subcategory);
-    console.log("Image URL:", design.imageUrls?.[0]);
-    console.log("Available colors:", design.availableColors);
-    console.log("Tags:", design.tags);
-    console.log("Is Premium:", design.isPremium, typeof design.isPremium);
-    console.log("Is Trending:", design.isTrending, typeof design.isTrending);
-    console.log("Is New Arrival:", design.isNewArrival, typeof design.isNewArrival);
 
     try {
       console.log("=== CALLING addToCart FUNCTION ===");
@@ -149,7 +124,6 @@ const DesignDetail = () => {
     } catch (error) {
       console.error("=== CART ADDITION ERROR ===");
       console.error("Error adding design to cart:", error);
-      console.error("Cart data that failed:", cartData);
 
       toast({
         title: "Error",
@@ -167,15 +141,6 @@ const DesignDetail = () => {
   const handleImageModalClose = () => {
     console.log("Image modal closed");
     setIsModalOpen(false);
-  };
-
-  // Handle keyboard navigation in modal
-  const handleModalNavigation = (direction: 'next' | 'prev') => {
-    if (direction === 'next') {
-      goToNextImage();
-    } else {
-      goToPreviousImage();
-    }
   };
 
   if (isLoading) {
@@ -243,13 +208,12 @@ const DesignDetail = () => {
                   userSelect: 'none',
                   WebkitUserSelect: 'none',
                   WebkitTouchCallout: 'none'
-                } as React.CSSProperties}
+                }}
               />
 
               {/* Navigation Buttons - Only show if multiple images */}
               {hasMultipleImages && (
                 <>
-                  {/* Previous Button */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -261,7 +225,6 @@ const DesignDetail = () => {
                     <ChevronLeft className="h-5 w-5" />
                   </button>
 
-                  {/* Next Button */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -273,7 +236,6 @@ const DesignDetail = () => {
                     <ChevronRight className="h-5 w-5" />
                   </button>
 
-                  {/* Image Counter */}
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                     {selectedImageIndex + 1} / {design.imageUrls.length}
                   </div>
@@ -306,7 +268,7 @@ const DesignDetail = () => {
                         userSelect: 'none',
                         WebkitUserSelect: 'none',
                         WebkitTouchCallout: 'none'
-                      } as React.CSSProperties}
+                      }}
                     />
                   </div>
                 ))}
@@ -319,7 +281,9 @@ const DesignDetail = () => {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 {design.isPremium && (
-                  <Badge className="bg-gradient-primary text-primary-foreground">Premium</Badge>
+                  <Badge className="bg-gradient-primary text-primary-foreground" style={{ display: 'flex', opacity: 1, visibility: 'visible' }}>
+                    Premium
+                  </Badge>
                 )}
                 {design.isTrending && (
                   <Badge variant="secondary">Trending</Badge>
@@ -362,7 +326,6 @@ const DesignDetail = () => {
                 )}
               </div>
 
-              
               <Button
                 size="lg"
                 className="w-full"
@@ -392,7 +355,6 @@ const DesignDetail = () => {
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  {/* Combined size display in the requested format */}
                   {(design.fileSizePx || design.fileSizeCm || design.dpi) && (
                     <div className="space-y-1">
                       <div className="text-muted-foreground">Size:</div>
@@ -463,13 +425,86 @@ const DesignDetail = () => {
         </div>
       </main>
 
-      {/* Image Modal - Using standard ImageModal without custom navigation props */}
-      <ImageModal
-        isOpen={isModalOpen}
-        onClose={handleImageModalClose}
-        imageUrl={design.imageUrls?.[selectedImageIndex] || '/placeholder.svg'}
-        alt={`${design.designName} ${selectedImageIndex + 1}`}
-      />
+      {/* Custom Image Modal with Thumbnail Navigation */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
+          <div className="relative max-w-6xl max-h-[90vh] w-full mx-4">
+            {/* Close Button */}
+            <button
+              onClick={handleImageModalClose}
+              className="absolute top-4 right-4 z-10 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+              aria-label="Close modal"
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            {/* Navigation Buttons */}
+            {hasMultipleImages && (
+              <>
+                <button
+                  onClick={goToPreviousImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                  onClick={goToNextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+              </>
+            )}
+
+            {/* Main Image */}
+            <div className="flex items-center justify-center h-full">
+              <img
+                src={design.imageUrls?.[selectedImageIndex] || '/placeholder.svg'}
+                alt={`${design.designName} ${selectedImageIndex + 1}`}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            </div>
+
+            {/* Image Counter */}
+            {hasMultipleImages && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full text-sm">
+                {selectedImageIndex + 1} / {design.imageUrls.length}
+              </div>
+            )}
+
+            {/* Thumbnail Navigation */}
+            {hasMultipleImages && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm rounded-lg p-4">
+                <div className="flex gap-2 max-w-md overflow-x-auto pb-2">
+                  {design.imageUrls.map((url, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`flex-shrink-0 w-16 h-16 rounded border-2 transition-all ${
+                        selectedImageIndex === index
+                          ? 'border-primary ring-2 ring-primary/50 scale-110'
+                          : 'border-gray-300 hover:border-primary/50'
+                      }`}
+                    >
+                      <img
+                        src={url}
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover rounded"
+                        draggable={false}
+                        onContextMenu={(e) => e.preventDefault()}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Authentication Modal */}
       <AuthModal
