@@ -45,8 +45,21 @@ const Items = () => {
     colorsParam ? colorsParam.split(',') : []
   );
 
-  // Categories data
-  const categories = [
+  // Main categories
+  const mainCategories = [
+    'All Designs',
+    'Womenswear',
+    'Menswear',
+    'Giftware/Stationery',
+    'Interiors/Home',
+    'Kidswear',
+    'Swimwear',
+    'Activewear',
+    'Archive'
+  ];
+
+  // All subcategories grouped
+  const allSubcategories = [
     'Geometric',
     'Floral',
     'Animals/Birds',
@@ -64,7 +77,14 @@ const Items = () => {
     'Animal Skins',
     'Nature',
     'Border',
-    '2 & 3 Colour'
+    '2 & 3 Colour',
+    'Vintage',
+    'Classic',
+    'Heritage',
+    'Retro',
+    'Historical',
+    'Antique',
+    'Timeless'
   ];
 
   // Update selectedColors when URL changes
@@ -75,9 +95,9 @@ const Items = () => {
   // Reset page when filters change
   useEffect(() => {
     setPage(0);
-  }, [subcategory, search, isPremium, isTrending, isNewArrival, colorsParam, sortBy, sortDirection]);
+  }, [category, subcategory, search, isPremium, isTrending, isNewArrival, colorsParam, sortBy, sortDirection]);
 
-  // API params - don't include colors in API query, we'll filter client-side
+  // API params
   const apiParams = {
     page,
     size: 20,
@@ -96,13 +116,12 @@ const Items = () => {
   } else if (isNewArrival) {
     designsQuery = useNewArrivalDesigns(apiParams);
   } else {
-    // Always use useDesigns for subcategory filtering since we're doing client-side filtering
     designsQuery = useDesigns(apiParams);
   }
 
   const { data: rawData, isLoading, error } = designsQuery;
 
-  // Filter data client-side for colors and subcategory matching
+  // Filter data client-side for colors, category, and subcategory matching
   const data = rawData ? {
     ...rawData,
     content: rawData.content.filter((design: any) => {
@@ -118,7 +137,18 @@ const Items = () => {
         }
       }
 
-      // Subcategory filtering - check if selected subcategory matches any word in category or subcategory
+      // Category filtering (new logic)
+      let passesCategoryFilter = true;
+      if (category && category !== 'all') {
+        const designCategory = (design.category || '').toLowerCase();
+        const selectedCategoryLower = category.toLowerCase();
+        
+        // Check if the selected category matches the design category
+        passesCategoryFilter = designCategory.includes(selectedCategoryLower) || 
+                              selectedCategoryLower.includes(designCategory);
+      }
+
+      // Subcategory filtering
       let passesSubcategoryFilter = true;
       if (subcategory && subcategory !== 'all') {
         const designCategory = (design.category || '').toLowerCase();
@@ -136,7 +166,7 @@ const Items = () => {
         );
       }
 
-      return passesColorFilter && passesSubcategoryFilter;
+      return passesColorFilter && passesCategoryFilter && passesSubcategoryFilter;
     })
   } : rawData;
 
@@ -171,20 +201,34 @@ const Items = () => {
     setSearchParams(params);
   };
 
-  // Handle category selection
+  // Handle main category selection
   const handleCategoryChange = (selectedCategory: string) => {
     if (selectedCategory === 'all') {
       updateFilters({ 
+        category: undefined,
         subcategory: undefined
       });
     } else {
-      // Set as subcategory filter for backend compatibility
       updateFilters({ 
-        subcategory: selectedCategory,
+        category: selectedCategory,
+        subcategory: undefined, // Clear subcategory when category changes
         search: undefined,
         premium: undefined,
         trending: undefined,
         new: undefined
+      });
+    }
+  };
+
+  // Handle subcategory selection
+  const handleSubcategoryChange = (selectedSubcategory: string) => {
+    if (selectedSubcategory === 'all') {
+      updateFilters({ 
+        subcategory: undefined
+      });
+    } else {
+      updateFilters({ 
+        subcategory: selectedSubcategory
       });
     }
   };
@@ -215,7 +259,8 @@ const Items = () => {
   // Get active filters for display
   const getActiveFilters = () => {
     const filters = [];
-    if (subcategory) filters.push({ label: `Category: ${subcategory}`, key: 'subcategory' });
+    if (category) filters.push({ label: `Category: ${category}`, key: 'category' });
+    if (subcategory) filters.push({ label: `Subcategory: ${subcategory}`, key: 'subcategory' });
     if (isPremium) filters.push({ label: 'Premium', key: 'premium' });
     if (isTrending) filters.push({ label: 'Trending', key: 'trending' });
     if (isNewArrival) filters.push({ label: 'New Arrivals', key: 'new' });
@@ -286,19 +331,47 @@ const Items = () => {
       <Separator />
 
       <div>
-        <h3 className="font-semibold mb-3">Categories</h3>
+        <h3 className="font-semibold mb-3">Main Categories</h3>
         <Select 
-          value={subcategory || 'all'} 
+          value={category || 'all'} 
           onValueChange={handleCategoryChange}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select category" />
+            <SelectValue placeholder="Select main category" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            {categories.map((cat) => (
+            {mainCategories.filter(cat => cat !== 'All Designs').map((cat) => (
               <SelectItem key={cat} value={cat}>
                 {cat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Subcategories - only show when a main category is selected or independently */}
+      <div>
+        <h3 className="font-semibold mb-3">
+          Subcategories
+          {category && (
+            <span className="text-sm font-normal text-muted-foreground ml-1">
+              (within {category})
+            </span>
+          )}
+        </h3>
+        <Select 
+          value={subcategory || 'all'} 
+          onValueChange={handleSubcategoryChange}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select subcategory" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Subcategories</SelectItem>
+            {allSubcategories.map((subcat) => (
+              <SelectItem key={subcat} value={subcat}>
+                {subcat}
               </SelectItem>
             ))}
           </SelectContent>
@@ -433,17 +506,6 @@ const Items = () => {
               <span>/</span>
               <span>{design.dpi}dpi</span>
             </div>
-
-            {/* Tags */}
-            {/* {design.tags && design.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {design.tags.slice(0, 2).map((tag: string, index: number) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            )} */}
           </div>
 
           {viewMode === 'list' && (
@@ -468,6 +530,16 @@ const Items = () => {
         <div className="mb-8">
           <h1 className="font-display text-4xl font-bold text-foreground mb-4">
             Design Collection
+            {category && (
+              <span className="text-2xl font-normal text-muted-foreground ml-2">
+                • {category}
+              </span>
+            )}
+            {subcategory && (
+              <span className="text-xl font-normal text-muted-foreground ml-2">
+                • {subcategory}
+              </span>
+            )}
           </h1>
 
           {/* Search Bar */}
@@ -625,7 +697,7 @@ const Items = () => {
                   ))}
                 </div>
 
-                {/* Pagination - only show if we have original pagination or if we're filtering colors */}
+                {/* Pagination */}
                 {((rawData?.totalPages > 1) || (selectedColors.length > 0 && data.content.length > 20)) && (
                   <div className="flex justify-center items-center mt-8 gap-2">
                     <Button
@@ -636,7 +708,6 @@ const Items = () => {
                       Previous
                     </Button>
 
-                    {/* Page info */}
                     <span className="flex items-center px-4 text-sm text-muted-foreground">
                       Page {(rawData?.pageable?.pageNumber || 0) + 1} of {rawData?.totalPages || 1}
                     </span>

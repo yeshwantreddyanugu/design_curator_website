@@ -74,15 +74,16 @@ const DesignNavigation = ({ isOpen, onClose, onNavigate }: DesignNavigationProps
     }
   };
 
-  const handleSubcategoryClick = (subcategory: string) => {
+  // Handle direct category navigation (new functionality)
+  const handleCategoryNavigation = (categoryName: string) => {
     if (onNavigate) {
-      const category = selectedCategory === "All Designs" ? undefined : selectedCategory;
-      onNavigate(category, subcategory);
+      const category = categoryName === "All Designs" ? undefined : categoryName;
+      onNavigate(category, undefined); // Navigate with category only, no subcategory
     }
     onClose();
   };
 
-  const handleMobileCategorySelect = (categoryName: string, subcategory: string) => {
+  const handleSubcategoryClick = (categoryName: string, subcategory: string) => {
     if (onNavigate) {
       const category = categoryName === "All Designs" ? undefined : categoryName;
       onNavigate(category, subcategory);
@@ -119,29 +120,44 @@ const DesignNavigation = ({ isOpen, onClose, onNavigate }: DesignNavigationProps
                 <div className="space-y-2">
                   {designCategories.map((category) => (
                     <div key={category.name} className="border rounded-lg overflow-hidden">
-                      <button
-                        className="w-full text-left px-4 py-3 bg-muted/30 flex items-center justify-between font-medium"
-                        onClick={() => handleCategoryClick(category.name)}
-                      >
-                        <span>{category.name}</span>
-                        <ChevronDown 
-                          className={`h-4 w-4 transition-transform ${
-                            mobileCategoryOpen === category.name ? 'rotate-180' : ''
-                          }`} 
-                        />
-                      </button>
+                      <div className="bg-muted/30">
+                        {/* Category Header with Navigation Button */}
+                        <div className="flex">
+                          <button
+                            className="flex-1 text-left px-4 py-3 font-medium hover:bg-muted/50 transition-colors"
+                            onClick={() => handleCategoryNavigation(category.name)}
+                          >
+                            {category.name}
+                          </button>
+                          <button
+                            className="px-4 py-3 hover:bg-muted/50 transition-colors border-l"
+                            onClick={() => handleCategoryClick(category.name)}
+                          >
+                            <ChevronDown 
+                              className={`h-4 w-4 transition-transform ${
+                                mobileCategoryOpen === category.name ? 'rotate-180' : ''
+                              }`} 
+                            />
+                          </button>
+                        </div>
+                      </div>
                       
                       {mobileCategoryOpen === category.name && (
-                        <div className="bg-background p-3 grid grid-cols-2 gap-2">
-                          {category.subcategories.map((subcategory) => (
-                            <button
-                              key={subcategory}
-                              className="text-left p-2 rounded-md hover:bg-muted/50 transition-smooth text-sm"
-                              onClick={() => handleMobileCategorySelect(category.name, subcategory)}
-                            >
-                              {subcategory}
-                            </button>
-                          ))}
+                        <div className="bg-background p-3">
+                          <div className="text-xs font-medium text-muted-foreground mb-2 px-2">
+                            Subcategories:
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {category.subcategories.map((subcategory) => (
+                              <button
+                                key={subcategory}
+                                className="text-left p-2 rounded-md hover:bg-muted/50 transition-smooth text-sm"
+                                onClick={() => handleSubcategoryClick(category.name, subcategory)}
+                              >
+                                {subcategory}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -156,18 +172,29 @@ const DesignNavigation = ({ isOpen, onClose, onNavigate }: DesignNavigationProps
                   <ul className="space-y-1">
                     {designCategories.map((category) => (
                       <li key={category.name}>
-                        <button
-                          className={`w-full text-left px-4 py-3 rounded-lg flex items-center justify-between group transition-smooth ${
-                            selectedCategory === category.name
-                              ? "bg-primary text-primary-foreground"
-                              : "hover:bg-muted text-foreground"
-                          }`}
-                          onMouseEnter={() => setSelectedCategory(category.name)}
-                          onClick={() => setSelectedCategory(category.name)}
-                        >
-                          <span className="font-medium">{category.name}</span>
-                          <ChevronRight className="h-4 w-4 opacity-60" />
-                        </button>
+                        <div className="flex rounded-lg overflow-hidden">
+                          <button
+                            className={`flex-1 text-left px-4 py-3 flex items-center group transition-smooth ${
+                              selectedCategory === category.name
+                                ? "bg-primary text-primary-foreground"
+                                : "hover:bg-muted text-foreground"
+                            }`}
+                            onMouseEnter={() => setSelectedCategory(category.name)}
+                            onClick={() => handleCategoryNavigation(category.name)}
+                          >
+                            <span className="font-medium flex-1">{category.name}</span>
+                          </button>
+                          <button
+                            className={`px-3 py-3 border-l transition-smooth ${
+                              selectedCategory === category.name
+                                ? "bg-primary/90 text-primary-foreground border-primary-foreground/20"
+                                : "hover:bg-muted text-foreground border-border"
+                            }`}
+                            onMouseEnter={() => setSelectedCategory(category.name)}
+                          >
+                            <ChevronRight className="h-4 w-4 opacity-60" />
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
@@ -175,13 +202,30 @@ const DesignNavigation = ({ isOpen, onClose, onNavigate }: DesignNavigationProps
 
                 {/* Right Subcategories */}
                 <div className="col-span-8 p-6 overflow-y-auto">
-                  <h3 className="text-lg font-semibold mb-4">{selectedCategory}</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">{selectedCategory}</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCategoryNavigation(selectedCategory)}
+                      className="text-xs"
+                    >
+                      View all {selectedCategory}
+                    </Button>
+                  </div>
+                  
+                  <div className="mb-3">
+                    <p className="text-sm text-muted-foreground">
+                      Choose a subcategory for more specific filtering:
+                    </p>
+                  </div>
+                  
                   <div className="grid grid-cols-2 gap-3">
                     {currentCategory?.subcategories.map((subcategory) => (
                       <button
                         key={subcategory}
-                        className="text-left p-3 rounded-lg hover:bg-muted/50 transition-smooth text-foreground hover:text-primary"
-                        onClick={() => handleSubcategoryClick(subcategory)}
+                        className="text-left p-3 rounded-lg hover:bg-muted/50 transition-smooth text-foreground hover:text-primary border border-transparent hover:border-primary/20"
+                        onClick={() => handleSubcategoryClick(selectedCategory, subcategory)}
                       >
                         {subcategory}
                       </button>

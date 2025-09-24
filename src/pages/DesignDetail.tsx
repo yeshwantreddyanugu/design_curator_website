@@ -34,7 +34,7 @@ const DesignDetail = () => {
   // Navigation functions for image gallery
   const goToNextImage = () => {
     if (design && design.imageUrls && design.imageUrls.length > 1) {
-      setSelectedImageIndex((prev) => 
+      setSelectedImageIndex((prev) =>
         prev === design.imageUrls.length - 1 ? 0 : prev + 1
       );
     }
@@ -42,7 +42,7 @@ const DesignDetail = () => {
 
   const goToPreviousImage = () => {
     if (design && design.imageUrls && design.imageUrls.length > 1) {
-      setSelectedImageIndex((prev) => 
+      setSelectedImageIndex((prev) =>
         prev === 0 ? design.imageUrls.length - 1 : prev - 1
       );
     }
@@ -57,7 +57,7 @@ const DesignDetail = () => {
   const handleAddToCart = () => {
     console.log("=== ADD TO CART - DESIGN DETAIL PAGE ===");
     console.log("Design data received from API:", design);
-        
+
     if (!user) {
       console.log("User not authenticated, opening login modal");
       setIsAuthModalOpen(true);
@@ -75,7 +75,7 @@ const DesignDetail = () => {
     }
 
     console.log("=== CART DATA PREPARATION ===");
-        
+
     // Prepare cart data
     const cartData = {
       type: 'design' as const, // Fix type to be literal type instead of string
@@ -111,13 +111,13 @@ const DesignDetail = () => {
     console.log("=== CART DATA ANALYSIS ===");
     console.log("Cart data being sent:");
     console.log(JSON.stringify(cartData, null, 2));
-        
+
     console.log("=== ID FIELD ANALYSIS ===");
     console.log("design.id (from API):", design.id, typeof design.id);
     console.log("designId (from URL params):", designId, typeof designId);
     console.log("cartData.designId:", cartData.designId, typeof cartData.designId);
     console.log("cartData.productId:", cartData.productId, typeof cartData.productId);
-        
+
     console.log("=== PRICE ANALYSIS ===");
     console.log("Original price:", design.price, typeof design.price);
     console.log("Discount price/percentage:", design.discountPrice, typeof design.discountPrice);
@@ -141,7 +141,7 @@ const DesignDetail = () => {
 
       console.log("=== CART ADDITION SUCCESS ===");
       console.log("Successfully added design to cart with ID:", cartData.designId);
-            
+
       toast({
         title: "Added to cart!",
         description: `${design.designName} has been added to your cart.`,
@@ -150,7 +150,7 @@ const DesignDetail = () => {
       console.error("=== CART ADDITION ERROR ===");
       console.error("Error adding design to cart:", error);
       console.error("Cart data that failed:", cartData);
-            
+
       toast({
         title: "Error",
         description: "Failed to add design to cart. Please try again.",
@@ -245,7 +245,7 @@ const DesignDetail = () => {
                   WebkitTouchCallout: 'none'
                 } as React.CSSProperties}
               />
-              
+
               {/* Navigation Buttons - Only show if multiple images */}
               {hasMultipleImages && (
                 <>
@@ -287,11 +287,10 @@ const DesignDetail = () => {
                 {design.imageUrls.slice(0, 4).map((url, index) => (
                   <div
                     key={index}
-                    className={`aspect-square overflow-hidden rounded-lg border-2 cursor-pointer select-none transition-all ${
-                      selectedImageIndex === index 
-                        ? 'border-primary ring-2 ring-primary/20' 
+                    className={`aspect-square overflow-hidden rounded-lg border-2 cursor-pointer select-none transition-all ${selectedImageIndex === index
+                        ? 'border-primary ring-2 ring-primary/20'
                         : 'border-border hover:border-primary/50'
-                    }`}
+                      }`}
                     onClick={() => setSelectedImageIndex(index)}
                     onContextMenu={(e) => { e.preventDefault(); return false; }}
                     style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
@@ -347,19 +346,23 @@ const DesignDetail = () => {
               </div>
 
               <div className="flex items-center gap-4 mb-6">
-                <span className="text-2xl font-bold text-primary">
-                  ₹{design.discountPrice && design.discountPrice > 0
-                    ? Math.ceil(design.price - (design.price * design.discountPrice) / 100)
-                    : Math.ceil(design.price)
-                  }
-                </span>
-                {design.discountPrice && design.discountPrice > 0 && (
-                  <span className="text-lg text-muted-foreground line-through">
+                {design.discountPrice && design.discountPrice > 0 ? (
+                  <>
+                    <span className="text-2xl font-bold text-primary">
+                      ₹{Math.ceil(design.price - (design.price * design.discountPrice) / 100)}
+                    </span>
+                    <span className="text-lg text-muted-foreground line-through">
+                      ₹{Math.ceil(design.price)}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-2xl font-bold text-primary">
                     ₹{Math.ceil(design.price)}
                   </span>
                 )}
               </div>
 
+              
               <Button
                 size="lg"
                 className="w-full"
