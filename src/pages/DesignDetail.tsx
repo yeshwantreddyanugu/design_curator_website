@@ -386,7 +386,7 @@ const DesignDetail = () => {
             </Card>
 
             {/* Available Colors */}
-            {design.availableColors && design.availableColors.length > 0 && (
+            {/* {design.availableColors && design.availableColors.length > 0 && (
               <Card>
                 <CardContent className="p-6">
                   <h3 className="font-semibold mb-4 flex items-center gap-2">
@@ -406,7 +406,7 @@ const DesignDetail = () => {
                   </div>
                 </CardContent>
               </Card>
-            )}
+            )} */}
 
             {/* Tags */}
             {design.tags && design.tags.length > 0 && (
@@ -426,50 +426,49 @@ const DesignDetail = () => {
       </main>
 
       {/* Custom Image Modal with Thumbnail Navigation */}
-      {/* Custom Image Modal with Thumbnail Navigation Below */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
           onClick={handleImageModalClose}
         >
           <div
-            className="relative max-w-6xl w-full mx-4 flex flex-col items-center"
+            className="relative max-w-6xl w-full max-h-full flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button */}
-            <button
-              onClick={handleImageModalClose}
-              className="absolute -top-16 right-0 z-10 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
-              aria-label="Close modal"
-            >
-              <X className="h-6 w-6" />
-            </button>
-
-            {/* Main Image Container */}
+            {/* Close Button - Positioned on the image itself */}
             <div className="relative w-full flex justify-center mb-4">
+              {/* Close Button - Now positioned on the image container */}
+              <button
+                onClick={handleImageModalClose}
+                className="absolute top-4 right-4 z-20 bg-black/70 text-white p-2 rounded-full hover:bg-black/90 transition-colors shadow-lg"
+                aria-label="Close modal"
+              >
+                <X className="h-5 w-5 sm:h-6 sm:w-6" />
+              </button>
+
               {/* Navigation Buttons */}
               {hasMultipleImages && (
                 <>
                   <button
                     onClick={goToPreviousImage}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/70 text-white p-2 sm:p-3 rounded-full hover:bg-black/90 transition-colors shadow-lg"
                     aria-label="Previous image"
                   >
-                    <ChevronLeft className="h-6 w-6" />
+                    <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
                   </button>
                   <button
                     onClick={goToNextImage}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/70 text-white p-2 sm:p-3 rounded-full hover:bg-black/90 transition-colors shadow-lg"
                     aria-label="Next image"
                   >
-                    <ChevronRight className="h-6 w-6" />
+                    <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
                   </button>
                 </>
               )}
 
               {/* Image Counter */}
               {hasMultipleImages && (
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full text-sm">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-black/70 text-white px-3 py-1 rounded-full text-sm shadow-lg">
                   {selectedImageIndex + 1} / {design.imageUrls.length}
                 </div>
               )}
@@ -481,18 +480,24 @@ const DesignDetail = () => {
                 className="max-w-full max-h-[70vh] object-contain rounded-lg"
                 draggable={false}
                 onContextMenu={(e) => e.preventDefault()}
+                style={{
+                  width: 'auto',
+                  height: 'auto',
+                  maxWidth: '100%',
+                  maxHeight: '70vh'
+                }}
               />
             </div>
 
-            {/* Thumbnail Navigation - Now below the main image */}
+            {/* Thumbnail Navigation - Below the main image */}
             {hasMultipleImages && (
-              <div className="bg-black/50 backdrop-blur-sm rounded-lg p-4 w-full max-w-2xl">
-                <div className="flex gap-2 overflow-x-auto justify-center pb-2">
+              <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3 sm:p-4 w-full max-w-2xl mt-2">
+                <div className="flex gap-2 overflow-x-auto justify-center">
                   {design.imageUrls.map((url, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
-                      className={`flex-shrink-0 w-16 h-16 rounded border-2 transition-all ${selectedImageIndex === index
+                      className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded border-2 transition-all ${selectedImageIndex === index
                           ? 'border-primary ring-2 ring-primary/50 scale-110'
                           : 'border-gray-300 hover:border-primary/50'
                         }`}

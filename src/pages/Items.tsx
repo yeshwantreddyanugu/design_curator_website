@@ -34,6 +34,7 @@ const Items = () => {
   const isTrending = searchParams.get('trending') === 'true';
   const isNewArrival = searchParams.get('new') === 'true';
   const colorsParam = searchParams.get('colors');
+  const licenseType = searchParams.get('licenseType');
 
   // Local state
   const [searchTerm, setSearchTerm] = useState(search || '');
@@ -87,6 +88,13 @@ const Items = () => {
     'Timeless'
   ];
 
+  // License types
+  const licenseTypes = [
+    'Commercial',
+    'Personal',
+    'Extended'
+  ];
+
   // Update selectedColors when URL changes
   useEffect(() => {
     setSelectedColors(colorsParam ? colorsParam.split(',') : []);
@@ -95,7 +103,7 @@ const Items = () => {
   // Reset page when filters change
   useEffect(() => {
     setPage(0);
-  }, [category, subcategory, search, isPremium, isTrending, isNewArrival, colorsParam, sortBy, sortDirection]);
+  }, [category, subcategory, search, isPremium, isTrending, isNewArrival, colorsParam, licenseType, sortBy, sortDirection]);
 
   // API params
   const apiParams = {
@@ -121,7 +129,7 @@ const Items = () => {
 
   const { data: rawData, isLoading, error } = designsQuery;
 
-  // Filter data client-side for colors, category, and subcategory matching
+  // Filter data client-side for colors, category, subcategory, and license type matching
   const data = rawData ? {
     ...rawData,
     content: rawData.content.filter((design: any) => {
@@ -182,7 +190,17 @@ const Items = () => {
         );
       }
 
-      return passesColorFilter && passesCategoryFilter && passesSubcategoryFilter;
+      // License type filtering
+      let passesLicenseFilter = true;
+      if (licenseType && licenseType !== 'all') {
+        const designLicense = (design.licenseType || '').toLowerCase();
+        const selectedLicenseLower = licenseType.toLowerCase();
+        
+        passesLicenseFilter = designLicense.includes(selectedLicenseLower) || 
+                             selectedLicenseLower.includes(designLicense);
+      }
+
+      return passesColorFilter && passesCategoryFilter && passesSubcategoryFilter && passesLicenseFilter;
     })
   } : rawData;
 
@@ -198,6 +216,7 @@ const Items = () => {
       params.delete('premium');
       params.delete('trending');
       params.delete('new');
+      params.delete('licenseType');
       setSearchParams(params);
     }
   };
@@ -231,7 +250,8 @@ const Items = () => {
         search: undefined,
         premium: undefined,
         trending: undefined,
-        new: undefined
+        new: undefined,
+        licenseType: undefined
       });
     }
   };
@@ -245,6 +265,19 @@ const Items = () => {
     } else {
       updateFilters({
         subcategory: selectedSubcategory
+      });
+    }
+  };
+
+  // Handle license type selection
+  const handleLicenseTypeChange = (selectedLicenseType: string) => {
+    if (selectedLicenseType === 'all') {
+      updateFilters({
+        licenseType: undefined
+      });
+    } else {
+      updateFilters({
+        licenseType: selectedLicenseType
       });
     }
   };
@@ -277,6 +310,7 @@ const Items = () => {
     const filters = [];
     if (category) filters.push({ label: `Category: ${category}`, key: 'category' });
     if (subcategory) filters.push({ label: `Subcategory: ${subcategory}`, key: 'subcategory' });
+    if (licenseType) filters.push({ label: `License: ${licenseType}`, key: 'licenseType' });
     if (isPremium) filters.push({ label: 'Premium', key: 'premium' });
     if (isTrending) filters.push({ label: 'Trending', key: 'trending' });
     if (isNewArrival) filters.push({ label: 'New Arrivals', key: 'new' });
@@ -321,7 +355,7 @@ const Items = () => {
     return colorMap[color] || color.toLowerCase();
   };
 
-  // Updated FilterPanel component with removed badges
+  // Updated FilterPanel component with License Type filter
   const FilterPanel = () => (
     <div className="space-y-6">
       <div>
@@ -468,7 +502,64 @@ const Items = () => {
 
       <Separator />
 
-      {/* Quick Filters - Removed badges */}
+      {/* License Type Filter - NEW */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold">License Type</h3>
+          {licenseType && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleLicenseTypeChange('all')}
+              className="text-xs text-muted-foreground hover:text-foreground h-6 px-2"
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <input
+              type="radio"
+              id="license-all"
+              name="licenseType"
+              checked={!licenseType || licenseType === 'all'}
+              onChange={() => handleLicenseTypeChange('all')}
+              className="text-primary focus:ring-primary"
+            />
+            <label
+              htmlFor="license-all"
+              className="text-sm cursor-pointer flex-1 hover:text-primary transition-colors font-medium"
+            >
+              All License Types
+            </label>
+          </div>
+
+          {licenseTypes.map((license) => (
+            <div key={license} className="flex items-center space-x-2">
+              <input
+                type="radio"
+                id={`license-${license}`}
+                name="licenseType"
+                checked={licenseType === license}
+                onChange={() => handleLicenseTypeChange(license)}
+                className="text-primary focus:ring-primary"
+              />
+              <label
+                htmlFor={`license-${license}`}
+                className="text-sm cursor-pointer flex-1 hover:text-primary transition-colors"
+              >
+                {license}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Quick Filters */}
       <div>
         <h3 className="font-semibold mb-3">Quick Filters</h3>
         <div className="space-y-3">
@@ -609,6 +700,9 @@ const Items = () => {
             <p className="text-sm text-muted-foreground mt-1">
               {design.category} {design.subcategory && design.subcategory !== 'n' && `• ${design.subcategory}`}
             </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              License: {design.licenseType || 'Not specified'}
+            </p>
             <div className="flex items-center gap-2 mt-2">
               <span className="font-semibold text-primary">
                 ₹{design.discountPrice > 0 ? Math.round(design.price - (design.price * design.discountPrice / 100)) : Math.round(design.price)}
@@ -665,6 +759,11 @@ const Items = () => {
             {subcategory && (
               <span className="text-xl font-normal text-muted-foreground ml-2">
                 • {subcategory}
+              </span>
+            )}
+            {licenseType && (
+              <span className="text-xl font-normal text-muted-foreground ml-2">
+                • {licenseType} License
               </span>
             )}
           </h1>
@@ -755,6 +854,7 @@ const Items = () => {
                     {/* Show filtered count vs total when filters are applied */}
                     {(category && category !== 'all') ||
                       (subcategory && subcategory !== 'all') ||
+                      (licenseType && licenseType !== 'all') ||
                       selectedColors.length > 0 ||
                       isPremium ||
                       isTrending ||

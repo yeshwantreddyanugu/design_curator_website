@@ -12,7 +12,8 @@ const TrendingCollections = () => {
     const params = new URLSearchParams();
     if (category) params.set("category", category);
     if (subcategory && subcategory !== "n") params.set("subcategory", subcategory);
-    navigate(`/items?${params.toString()}`);
+    // navigate(`/items?${params.toString()}`);
+    navigate(`/items`);
   };
 
   // ✅ Keep numeric values, don’t prefix ₹ yet
