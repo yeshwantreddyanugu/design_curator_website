@@ -279,7 +279,7 @@ const Checkout = () => {
       handler: async (response: RazorpayResponse) => {
         console.log('=== RAZORPAY HANDLER CALLED ===');
         console.log('Razorpay Response:', response);
-        
+
         try {
           const verificationResult = await verifyPayment({
             orderId: orderData.order.orderId,
@@ -361,6 +361,9 @@ const Checkout = () => {
     const razorpay = new window.Razorpay(options);
 
     razorpay.on('payment.failed', (response: any) => {
+      console.log('=== PAYMENT FAILED ===');
+      console.log('Payment failed response:', response);
+
       setPaymentResultModal({
         isOpen: true,
         result: {
@@ -371,6 +374,32 @@ const Checkout = () => {
       });
 
       setIsProcessing(false);
+    });
+
+    // Add modal dismissed event handler for when user cancels/closes the Razorpay modal
+    razorpay.on('dismissed', (response: any) => {
+      console.log('=== RAZORPAY MODAL DISMISSED ===');
+      console.log('Dismissed response:', response);
+
+      // Show toast message for cancelled payment
+      toast({
+        title: "Payment Cancelled",
+        description: "You cancelled the payment process. You can try again anytime.",
+        variant: "destructive",
+      });
+
+      // Reset processing state
+      setIsProcessing(false);
+
+      // Optional: You can also show a modal or update UI state here
+      setPaymentResultModal({
+        isOpen: true,
+        result: {
+          success: false,
+          message: "Payment was cancelled. You can try again if you wish to complete your purchase.",
+          status: 'cancelled'
+        }
+      });
     });
 
     razorpay.open();
@@ -433,7 +462,7 @@ const Checkout = () => {
           tags: item.tags || [],
           description: item.description || '',
           fileSizePx: (item as any).fileSizePx || '1600x1280',
-          fileSizeCm: (item as any).fileSizeCm || '56.44x45.16', 
+          fileSizeCm: (item as any).fileSizeCm || '56.44x45.16',
           dpi: (item as any).dpi || 72,
           includedFiles: (item as any).includedFiles || 'WEBP, SVG, PNG, AI, EPS, JPEG',
           licenseType: (item as any).licenseType || 'Commercial',
@@ -500,7 +529,7 @@ const Checkout = () => {
   const renderPaymentResultModal = () => {
     if (!paymentResultModal.isOpen || !paymentResultModal.result) return null;
 
-    const { success, message, orderId } = paymentResultModal.result;
+    const { success, message, orderId, status } = paymentResultModal.result;
 
     if (success) {
       return (
@@ -509,24 +538,24 @@ const Checkout = () => {
             <div className="relative overflow-hidden">
               {/* Success Animation Background */}
               <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 opacity-60"></div>
-              
+
               {/* Decorative Elements */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-100 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
               <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-100 to-transparent rounded-full translate-y-12 -translate-x-12"></div>
-              
+
               <div className="relative z-10 p-6">
                 <DialogHeader className="text-center space-y-4">
                   {/* Success Icon with Animation */}
                   <div className="mx-auto w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg animate-pulse">
                     <CheckCircle className="h-12 w-12 text-white" />
                   </div>
-                  
+
                   <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-2">
                     <Sparkles className="h-6 w-6 text-yellow-500" />
                     Payment Successful!
                     <Sparkles className="h-6 w-6 text-yellow-500" />
                   </DialogTitle>
-                  
+
                   <DialogDescription className="text-gray-600 text-base leading-relaxed">
                     Congratulations! Your payment has been processed successfully and your designs are ready for download.
                   </DialogDescription>
@@ -544,7 +573,7 @@ const Checkout = () => {
                         <p className="text-sm text-gray-500">Your designs will be delivered via email</p>
                       </div>
                     </div>
-                    
+
                     {orderId && (
                       <div className="bg-gray-50 rounded-lg p-3">
                         <div className="text-sm font-medium text-gray-700">Order ID</div>
@@ -615,33 +644,42 @@ const Checkout = () => {
         </Dialog>
       );
     } else {
-      // Failure Modal (keep existing design)
+      // Handle different failure states
+      const isCancelled = status === 'cancelled';
+
       return (
         <Dialog open={paymentResultModal.isOpen} onOpenChange={handlePaymentModalClose}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-center text-xl font-semibold text-red-600">
-                Payment Failed
+              <DialogTitle className={`text-center text-xl font-semibold ${isCancelled ? 'text-yellow-600' : 'text-red-600'}`}>
+                {isCancelled ? 'Payment Cancelled' : 'Payment Failed'}
               </DialogTitle>
             </DialogHeader>
 
             <div className="flex flex-col items-center py-6 px-4">
-              <XCircle className="h-20 w-20 text-red-500 mx-auto mb-6" />
+              {isCancelled ? (
+                <AlertCircle className="h-20 w-20 text-yellow-500 mx-auto mb-6" />
+              ) : (
+                <XCircle className="h-20 w-20 text-red-500 mx-auto mb-6" />
+              )}
 
               <div className="text-center space-y-4">
                 <DialogDescription className="text-base leading-relaxed text-gray-700">
                   {message}
                 </DialogDescription>
 
-                {orderId && (
-                  <div className="border p-4 rounded-lg bg-red-50 border-red-200">
-                    <div className="text-sm font-medium text-red-800">Order ID</div>
-                    <div className="text-sm font-mono mt-1 text-red-700">{orderId}</div>
+                {orderId && !isCancelled && (
+                  <div className={`border p-4 rounded-lg ${isCancelled ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'}`}>
+                    <div className={`text-sm font-medium ${isCancelled ? 'text-yellow-800' : 'text-red-800'}`}>Order ID</div>
+                    <div className={`text-sm font-mono mt-1 ${isCancelled ? 'text-yellow-700' : 'text-red-700'}`}>{orderId}</div>
                   </div>
                 )}
 
                 <div className="text-sm text-gray-500">
-                  If you need assistance, please contact our support team with your order details.
+                  {isCancelled
+                    ? "You can try again whenever you're ready to complete your purchase."
+                    : "If you need assistance, please contact our support team with your order details."
+                  }
                 </div>
               </div>
             </div>
@@ -651,10 +689,18 @@ const Checkout = () => {
                 <Button
                   variant="outline"
                   onClick={handlePaymentModalClose}
-                  className="flex-1 border-gray-300 hover:bg-gray-50"
+                  className={`flex-1 ${isCancelled ? 'border-yellow-300 hover:bg-yellow-50' : 'border-gray-300 hover:bg-gray-50'}`}
                 >
                   Close
                 </Button>
+                {isCancelled && (
+                  <Button
+                    onClick={handleCheckout}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Try Again
+                  </Button>
+                )}
               </div>
             </DialogFooter>
           </DialogContent>
