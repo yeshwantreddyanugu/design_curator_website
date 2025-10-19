@@ -694,10 +694,10 @@ const Items = () => {
 
         <div className={`p-4 ${viewMode === 'list' ? 'flex items-center justify-between' : ''}`}>
           <div className={viewMode === 'list' ? 'flex-1' : ''}>
-            {/* <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
               {design.designName}
             </h3>
-            <p className="text-sm text-muted-foreground mt-1">
+            {/* <p className="text-sm text-muted-foreground mt-1">
               {design.category} {design.subcategory && design.subcategory !== 'n' && `• ${design.subcategory}`}
             </p> */}
             {/* <p className="text-xs text-muted-foreground mt-1">
