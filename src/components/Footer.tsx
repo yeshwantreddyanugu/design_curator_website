@@ -1,13 +1,20 @@
 import { Instagram, Twitter, Facebook, Youtube } from "lucide-react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
+
 
 const Footer = () => {
-  const navigate = useNavigate(); // Initialize navigate function
+  const navigate = useNavigate();
+
 
   const handleNavigation = (path) => {
-    navigate(path); // Use React Router's navigate function
-    window.scrollTo(0, 0); // Scroll to top after navigation
+    navigate(path);
+    window.scrollTo(0, 0);
   };
+
+  const handleExternalLink = (url) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
 
   return (
     <footer className="bg-foreground text-background py-16 relative z-10">
@@ -19,7 +26,7 @@ const Footer = () => {
               Aza Arts
             </h3>
             <p className="text-background/80 leading-relaxed mb-6 max-w-md">
-              The leading destination for exclusively licensed print and pattern designs 
+              The leading destination for exclusively licensed print and pattern designs
               from the world's finest independent designers.
             </p>
             <div className="flex space-x-4">
@@ -30,12 +37,13 @@ const Footer = () => {
             </div>
           </div>
 
+
           {/* Quick Links */}
           <div>
             <h4 className="font-semibold text-background mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <button 
+                <button
                   className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
                   onClick={() => handleNavigation('/aboutUs')}
                 >
@@ -43,7 +51,7 @@ const Footer = () => {
                 </button>
               </li>
               <li>
-                <button 
+                <button
                   className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
                   onClick={() => handleNavigation('/privacy')}
                 >
@@ -51,7 +59,7 @@ const Footer = () => {
                 </button>
               </li>
               <li>
-                <button 
+                <button
                   className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
                   onClick={() => handleNavigation('/contactUs')}
                 >
@@ -59,7 +67,7 @@ const Footer = () => {
                 </button>
               </li>
               <li>
-                <button 
+                <button
                   className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
                   onClick={() => handleNavigation('/contactUs')}
                 >
@@ -67,7 +75,7 @@ const Footer = () => {
                 </button>
               </li>
               <li>
-                <button 
+                <button
                   className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
                   onClick={() => handleNavigation('/contactUs')}
                 >
@@ -77,12 +85,13 @@ const Footer = () => {
             </ul>
           </div>
 
+
           {/* Categories */}
           <div>
             <h4 className="font-semibold text-background mb-4">Categories</h4>
             <ul className="space-y-2">
               <li>
-                <button 
+                <button
                   className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
                   onClick={() => handleNavigation('/items')}
                 >
@@ -90,7 +99,7 @@ const Footer = () => {
                 </button>
               </li>
               <li>
-                <button 
+                <button
                   className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
                   onClick={() => handleNavigation('/items')}
                 >
@@ -98,7 +107,7 @@ const Footer = () => {
                 </button>
               </li>
               <li>
-                <button 
+                <button
                   className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
                   onClick={() => handleNavigation('/items')}
                 >
@@ -106,7 +115,7 @@ const Footer = () => {
                 </button>
               </li>
               <li>
-                <button 
+                <button
                   className="text-background/80 hover:text-primary transition-smooth block py-1 text-left w-full"
                   onClick={() => handleNavigation('/items')}
                 >
@@ -117,35 +126,51 @@ const Footer = () => {
           </div>
         </div>
 
+
         {/* Bottom */}
-        <div className="border-t border-background/20 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-background/60 text-sm">
-            © 2025 Aza Arts. All rights reserved.
-          </p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <button 
-              className="text-background/60 hover:text-primary transition-smooth text-sm"
-              onClick={() => handleNavigation('/privacy')}
-            >
-              Privacy Policy
-            </button>
-            <button 
-              className="text-background/60 hover:text-primary transition-smooth text-sm"
-              onClick={() => handleNavigation('/privacy')}
-            >
-              Terms of Service
-            </button>
-            <button 
-              className="text-background/60 hover:text-primary transition-smooth text-sm"
-              onClick={() => handleNavigation('/privacy')}
-            >
-              Cookie Policy
-            </button>
+        <div className="border-t border-background/20 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+            <p className="text-background/60 text-sm">
+              © 2025 Aza Arts. All rights reserved.
+            </p>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <button
+                className="text-background/60 hover:text-primary transition-smooth text-sm"
+                onClick={() => handleNavigation('/privacy')}
+              >
+                Privacy Policy
+              </button>
+              <button
+                className="text-background/60 hover:text-primary transition-smooth text-sm"
+                onClick={() => handleNavigation('/privacy')}
+              >
+                Terms of Service
+              </button>
+              <button
+                className="text-background/60 hover:text-primary transition-smooth text-sm"
+                onClick={() => handleNavigation('/privacy')}
+              >
+                Cookie Policy
+              </button>
+            </div>
           </div>
+          <div className="text-left pl-3">
+            <p className="text-background/60 text-sm">
+              Developed by{' '}
+              <button
+                onClick={() => handleExternalLink('https://lytortech.com')}
+                className="text-primary font-semibold hover:text-primary/80 transition-smooth cursor-pointer"
+              >
+                Lytortech
+              </button>
+            </p>
+          </div>
+
         </div>
       </div>
     </footer>
   );
 };
+
 
 export default Footer;
