@@ -694,15 +694,15 @@ const Items = () => {
 
         <div className={`p-4 ${viewMode === 'list' ? 'flex items-center justify-between' : ''}`}>
           <div className={viewMode === 'list' ? 'flex-1' : ''}>
-            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+            {/* <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
               {design.designName}
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
               {design.category} {design.subcategory && design.subcategory !== 'n' && `• ${design.subcategory}`}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            </p> */}
+            {/* <p className="text-xs text-muted-foreground mt-1">
               License: {design.licenseType || 'Not specified'}
-            </p>
+            </p> */}
             <div className="flex items-center gap-2 mt-2">
               <span className="font-semibold text-primary">
                 ₹{design.discountPrice > 0 ? Math.round(design.price - (design.price * design.discountPrice / 100)) : Math.round(design.price)}
