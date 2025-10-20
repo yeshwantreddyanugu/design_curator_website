@@ -362,7 +362,7 @@ const PaymentPage = () => {
         console.log("💰 Amount for Razorpay (paisa):", calculatedAmount);
 
         const options = {
-          key: 'rzp_live_fN6UZTO4YZyRd4',
+          key: 'rzp_live_RLWX63Wyr3DnEa',
           amount: calculatedAmount,
           currency: 'INR',
           name: 'Aza Arts',

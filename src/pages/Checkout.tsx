@@ -130,7 +130,7 @@ const Checkout = () => {
   const API_BASE_URL = 'https://az.lytortech.com/api';
 
   // Razorpay key
-  const RAZORPAY_KEY = 'rzp_live_fN6UZTO4YZyRd4';
+  const RAZORPAY_KEY = 'rzp_live_RLWX63Wyr3DnEa';
 
   // Filter cart items to only include designs
   const designItems = cartItems.filter(item => item.type === 'design');
