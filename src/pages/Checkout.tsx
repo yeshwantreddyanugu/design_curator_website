@@ -39,6 +39,9 @@ interface RazorpayOptions {
   theme: {
     color: string;
   };
+  modal?: {
+    ondismiss?: () => void;
+  };
 }
 
 // Declare Razorpay on window
@@ -269,11 +272,24 @@ const Checkout = () => {
   };
 
   const initializeRazorpay = (orderData: CreateOrderResponse, contactForm: any) => {
+    console.log('=== RAZORPAY INITIALIZATION ===');
+    console.log('Order Data received:', orderData);
+    console.log('Full orderData object:', JSON.stringify(orderData, null, 2));
+    console.log('orderData.amount:', orderData.amount);
+    console.log('orderData.order.totalAmount:', orderData.order.totalAmount);
+    
+    // Backend is sending amount in Rupees, need to convert to paise for Razorpay
+    // Razorpay requires amount in smallest currency unit (paise for INR)
+    // 1 Rupee = 100 paise
+    const amountInPaise = orderData.amount * 100;
+    console.log('Amount being sent to Razorpay (paise):', amountInPaise);
+    console.log('Amount in Rupees:', amountInPaise / 100);
+
     const options: RazorpayOptions = {
       key: RAZORPAY_KEY,
-      amount: 100, // Fixed amount of 1 INR for testing (amount in paise)
+      amount: amountInPaise, // Amount in paise (Rupees * 100)
       currency: orderData.currency,
-      name: 'Pattern Bank',
+      name: 'Aza Arts',
       description: 'Design Purchase',
       order_id: orderData.razorpayOrderId,
       handler: async (response: RazorpayResponse) => {
@@ -292,10 +308,8 @@ const Checkout = () => {
           console.log('Success:', verificationResult.success);
           console.log('Message:', verificationResult.message);
 
-          // Show success modal if verification response status is 200 (regardless of response content)
           if (verificationResult.success) {
             console.log('=== SHOWING SUCCESS MODAL ===');
-            // Prevent automatic redirect until user makes a choice
             setShouldPreventRedirect(true);
             clearCart();
 
@@ -352,6 +366,28 @@ const Checkout = () => {
       theme: {
         color: '#3B82F6',
       },
+      modal: {
+        ondismiss: () => {
+          console.log('=== RAZORPAY MODAL DISMISSED (ondismiss) ===');
+          
+          toast({
+            title: "Payment Cancelled",
+            description: "You cancelled the payment process. You can try again anytime.",
+            variant: "destructive",
+          });
+
+          setIsProcessing(false);
+
+          setPaymentResultModal({
+            isOpen: true,
+            result: {
+              success: false,
+              message: "Payment was cancelled. You can try again if you wish to complete your purchase.",
+              status: 'cancelled'
+            }
+          });
+        }
+      }
     };
 
     if (!window.Razorpay) {
@@ -361,45 +397,25 @@ const Checkout = () => {
     const razorpay = new window.Razorpay(options);
 
     razorpay.on('payment.failed', (response: any) => {
-      console.log('=== PAYMENT FAILED ===');
+      console.log('=== PAYMENT FAILED EVENT ===');
       console.log('Payment failed response:', response);
 
       setPaymentResultModal({
         isOpen: true,
         result: {
           success: false,
-          message: response.error.description || "Payment was not completed",
+          message: response.error?.description || "Payment failed. Please try again.",
           status: 'failed'
         }
       });
 
-      setIsProcessing(false);
-    });
-
-    // Add modal dismissed event handler for when user cancels/closes the Razorpay modal
-    razorpay.on('dismissed', (response: any) => {
-      console.log('=== RAZORPAY MODAL DISMISSED ===');
-      console.log('Dismissed response:', response);
-
-      // Show toast message for cancelled payment
       toast({
-        title: "Payment Cancelled",
-        description: "You cancelled the payment process. You can try again anytime.",
+        title: "Payment Failed",
+        description: response.error?.description || "Payment failed. Please try again.",
         variant: "destructive",
       });
 
-      // Reset processing state
       setIsProcessing(false);
-
-      // Optional: You can also show a modal or update UI state here
-      setPaymentResultModal({
-        isOpen: true,
-        result: {
-          success: false,
-          message: "Payment was cancelled. You can try again if you wish to complete your purchase.",
-          status: 'cancelled'
-        }
-      });
     });
 
     razorpay.open();
@@ -432,7 +448,6 @@ const Checkout = () => {
     setIsProcessing(true);
 
     try {
-      // Calculate total quantity and amount
       const quantity = designItems.reduce((total, item) => total + item.quantity, 0);
       const totalAmount = designItems.reduce((total, item) => {
         const originalPrice = item.price;
@@ -443,7 +458,10 @@ const Checkout = () => {
         return total + (roundedFinalPrice * item.quantity);
       }, 0);
 
-      // Transform cart items to match backend design format
+      console.log('=== FRONTEND CALCULATION ===');
+      console.log('Calculated Total Amount (Rupees):', totalAmount);
+      console.log('Design Items:', designItems);
+
       const designs = designItems.map(item => {
         const originalPrice = item.price;
         const discountPercentage = item.discountPrice || 0;
@@ -456,7 +474,7 @@ const Checkout = () => {
           category: item.category,
           subcategory: item.subcategory || 'n',
           price: originalPrice,
-          discountPrice: Math.ceil(finalDiscountedPrice), // This should be the final discounted price, not percentage
+          discountPrice: Math.ceil(finalDiscountedPrice),
           availableColors: item.availableColors || [],
           imageUrls: [item.image],
           tags: item.tags || [],
@@ -480,14 +498,11 @@ const Checkout = () => {
         address: user.address || contactForm.address,
         designs: designs,
         quantity: quantity,
-        totalAmount: totalAmount, // Use calculated total amount
+        totalAmount: totalAmount,
         status: 'PENDING'
       };
 
-      // Create order
       const createdOrder = await createOrder(orderData);
-
-      // Initialize Razorpay payment
       initializeRazorpay(createdOrder, contactForm);
 
     } catch (error) {
@@ -508,17 +523,18 @@ const Checkout = () => {
 
   const handlePaymentModalClose = () => {
     setPaymentResultModal({ isOpen: false, result: null });
+    setShouldPreventRedirect(false);
   };
 
   const handleNavigateToOrders = () => {
     setPaymentResultModal({ isOpen: false, result: null });
-    setShouldPreventRedirect(false); // Reset redirect prevention
+    setShouldPreventRedirect(false);
     navigate('/orders');
   };
 
   const handleShopMore = () => {
     setPaymentResultModal({ isOpen: false, result: null });
-    setShouldPreventRedirect(false); // Reset redirect prevention
+    setShouldPreventRedirect(false);
     navigate('/items');
   };
 
@@ -536,16 +552,12 @@ const Checkout = () => {
         <Dialog open={paymentResultModal.isOpen} onOpenChange={handlePaymentModalClose}>
           <DialogContent className="sm:max-w-lg">
             <div className="relative overflow-hidden">
-              {/* Success Animation Background */}
               <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 opacity-60"></div>
-
-              {/* Decorative Elements */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-green-100 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
               <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-100 to-transparent rounded-full translate-y-12 -translate-x-12"></div>
 
               <div className="relative z-10 p-6">
                 <DialogHeader className="text-center space-y-4">
-                  {/* Success Icon with Animation */}
                   <div className="mx-auto w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg animate-pulse">
                     <CheckCircle className="h-12 w-12 text-white" />
                   </div>
@@ -562,7 +574,6 @@ const Checkout = () => {
                 </DialogHeader>
 
                 <div className="mt-8 space-y-6">
-                  {/* Order Details Card */}
                   <div className="bg-white border border-green-200 rounded-xl p-5 shadow-sm">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -582,7 +593,6 @@ const Checkout = () => {
                     )}
                   </div>
 
-                  {/* Features Highlight */}
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
@@ -600,7 +610,6 @@ const Checkout = () => {
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
                     <Button
                       variant="outline"
@@ -619,7 +628,6 @@ const Checkout = () => {
                     </Button>
                   </div>
 
-                  {/* Divider with text */}
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-gray-200"></div>
@@ -629,7 +637,6 @@ const Checkout = () => {
                     </div>
                   </div>
 
-                  {/* Close Button */}
                   <Button
                     variant="ghost"
                     onClick={handlePaymentModalClose}
@@ -644,7 +651,6 @@ const Checkout = () => {
         </Dialog>
       );
     } else {
-      // Handle different failure states
       const isCancelled = status === 'cancelled';
 
       return (
@@ -693,14 +699,13 @@ const Checkout = () => {
                 >
                   Close
                 </Button>
-                {isCancelled && (
-                  <Button
-                    onClick={handleCheckout}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Try Again
-                  </Button>
-                )}
+                <Button
+                  onClick={handleCheckout}
+                  disabled={isProcessing}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isProcessing ? 'Processing...' : 'Try Again'}
+                </Button>
               </div>
             </DialogFooter>
           </DialogContent>
@@ -717,7 +722,6 @@ const Checkout = () => {
           <h1 className="font-display text-2xl md:text-3xl font-bold mb-6 md:mb-8">Checkout - Design Purchase</h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-            {/* Contact Information */}
             <div className="space-y-6">
               <Card>
                 <CardHeader>
@@ -778,7 +782,6 @@ const Checkout = () => {
               </Card>
             </div>
 
-            {/* Order Summary - Designs Only */}
             <div className="space-y-6">
               <Card>
                 <CardHeader>
@@ -789,7 +792,6 @@ const Checkout = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {designItems.map((item) => {
-                    // Calculate final price with discount
                     const originalPrice = item.price;
                     const discountPercentage = item.discountPrice || 0;
                     const discountAmount = originalPrice * discountPercentage / 100;
@@ -854,7 +856,6 @@ const Checkout = () => {
                         return total + (roundedFinalPrice * item.quantity);
                       }, 0))}</span>
                     </div>
-                    {/* Show total savings if there are discounts */}
                     {designItems.some(item => item.discountPrice > 0) && (
                       <div className="flex justify-between items-center text-sm text-green-600">
                         <span>Total Savings</span>
@@ -934,7 +935,6 @@ const Checkout = () => {
                 </CardContent>
               </Card>
 
-              {/* Design License Information */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-sm">License Information</CardTitle>
@@ -974,7 +974,6 @@ const Checkout = () => {
         description="Please sign in to complete your design purchase"
       />
 
-      {/* Enhanced Payment Result Modal */}
       {renderPaymentResultModal()}
     </div>
   );

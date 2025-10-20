@@ -181,7 +181,7 @@ const PaymentPage = () => {
         quantity: purchaseData.quantity,
         selectedColor: purchaseData.selectedColor,
         selectedSize: purchaseData.selectedSize,
-        unitPrice: purchaseData.price / 100,
+        unitPrice: purchaseData.price ,
         paymentMethod: "razorpay",
         orderNotes: customerDetails.orderNotes
       };
