@@ -430,13 +430,18 @@ const DesignDetail = () => {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
           onClick={handleImageModalClose}
+          onContextMenu={(e) => { e.preventDefault(); return false; }}
         >
           <div
             className="relative max-w-6xl w-full max-h-full flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
+            onContextMenu={(e) => { e.preventDefault(); return false; }}
           >
             {/* Close Button - Positioned on the image itself */}
-            <div className="relative w-full flex justify-center mb-4">
+            <div
+              className="relative w-full flex justify-center mb-4"
+              onContextMenu={(e) => { e.preventDefault(); return false; }}
+            >
               {/* Close Button - Now positioned on the image container */}
               <button
                 onClick={handleImageModalClose}
@@ -477,14 +482,20 @@ const DesignDetail = () => {
               <img
                 src={design.imageUrls?.[selectedImageIndex] || '/placeholder.svg'}
                 alt={`${design.designName} ${selectedImageIndex + 1}`}
-                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                className="max-w-full max-h-[70vh] object-contain rounded-lg select-none"
                 draggable={false}
-                onContextMenu={(e) => e.preventDefault()}
+                onContextMenu={(e) => { e.preventDefault(); return false; }}
+                onDragStart={(e) => { e.preventDefault(); return false; }}
+                onMouseDown={(e) => { if (e.button === 2) e.preventDefault(); }}
                 style={{
                   width: 'auto',
                   height: 'auto',
                   maxWidth: '100%',
-                  maxHeight: '70vh'
+                  maxHeight: '70vh',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  WebkitTouchCallout: 'none',
+                  pointerEvents: 'auto'
                 }}
               />
             </div>
@@ -498,16 +509,23 @@ const DesignDetail = () => {
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
                       className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded border-2 transition-all ${selectedImageIndex === index
-                          ? 'border-primary ring-2 ring-primary/50 scale-110'
-                          : 'border-gray-300 hover:border-primary/50'
+                        ? 'border-primary ring-2 ring-primary/50 scale-110'
+                        : 'border-gray-300 hover:border-primary/50'
                         }`}
+                      onContextMenu={(e) => { e.preventDefault(); return false; }}
                     >
                       <img
                         src={url}
                         alt={`Thumbnail ${index + 1}`}
-                        className="w-full h-full object-cover rounded"
+                        className="w-full h-full object-cover rounded select-none"
                         draggable={false}
-                        onContextMenu={(e) => e.preventDefault()}
+                        onContextMenu={(e) => { e.preventDefault(); return false; }}
+                        onDragStart={(e) => { e.preventDefault(); return false; }}
+                        style={{
+                          userSelect: 'none',
+                          WebkitUserSelect: 'none',
+                          WebkitTouchCallout: 'none'
+                        }}
                       />
                     </button>
                   ))}
@@ -517,6 +535,7 @@ const DesignDetail = () => {
           </div>
         </div>
       )}
+
 
       {/* Authentication Modal */}
       <AuthModal

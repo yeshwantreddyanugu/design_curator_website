@@ -138,6 +138,21 @@ const Checkout = () => {
   // Filter cart items to only include designs
   const designItems = cartItems.filter(item => item.type === 'design');
 
+  // Calculate total amount function
+  const calculateTotalAmount = () => {
+    return Math.ceil(designItems.reduce((total, item) => {
+      const originalPrice = item.price;
+      const discountPercentage = item.discountPrice || 0;
+      const discountAmount = originalPrice * discountPercentage / 100;
+      const finalPrice = originalPrice - discountAmount;
+      const roundedFinalPrice = Math.ceil(finalPrice);
+      return total + (roundedFinalPrice * item.quantity);
+    }, 0));
+  };
+
+  // Get display amount for UI
+  const displayAmount = calculateTotalAmount();
+
   // Redirect if no design items in cart (but only if not during payment process)
   useEffect(() => {
     if (designItems.length === 0 && !shouldPreventRedirect) {
@@ -274,20 +289,21 @@ const Checkout = () => {
   const initializeRazorpay = (orderData: CreateOrderResponse, contactForm: any) => {
     console.log('=== RAZORPAY INITIALIZATION ===');
     console.log('Order Data received:', orderData);
-    console.log('Full orderData object:', JSON.stringify(orderData, null, 2));
-    console.log('orderData.amount:', orderData.amount);
-    console.log('orderData.order.totalAmount:', orderData.order.totalAmount);
+    console.log('Order Total Amount from backend:', orderData.order.totalAmount);
     
-    // Backend is sending amount in Rupees, need to convert to paise for Razorpay
-    // Razorpay requires amount in smallest currency unit (paise for INR)
-    // 1 Rupee = 100 paise
-    const amountInPaise = orderData.amount * 100;
-    console.log('Amount being sent to Razorpay (paise):', amountInPaise);
-    console.log('Amount in Rupees:', amountInPaise / 100);
+    // FORCEFUL FIX: Always use frontend calculated amount multiplied by 100
+    const frontendAmountInPaise = displayAmount * 100;
+    console.log('Frontend calculated amount (paise):', frontendAmountInPaise);
+    console.log('Backend returned amount (paise):', orderData.amount);
+    
+    // Use the frontend calculated amount FORCEFULLY
+    const amountInPaise = frontendAmountInPaise;
+    console.log('Final amount being sent to Razorpay (paise):', amountInPaise);
+    console.log('Equivalent amount in rupees:', amountInPaise / 100);
 
     const options: RazorpayOptions = {
       key: RAZORPAY_KEY,
-      amount: amountInPaise, // Amount in paise (Rupees * 100)
+      amount: amountInPaise, // FORCEFULLY using frontend calculated amount
       currency: orderData.currency,
       name: 'Aza Arts',
       description: 'Design Purchase',
@@ -449,17 +465,11 @@ const Checkout = () => {
 
     try {
       const quantity = designItems.reduce((total, item) => total + item.quantity, 0);
-      const totalAmount = designItems.reduce((total, item) => {
-        const originalPrice = item.price;
-        const discountPercentage = item.discountPrice || 0;
-        const discountAmount = originalPrice * discountPercentage / 100;
-        const finalPrice = originalPrice - discountAmount;
-        const roundedFinalPrice = Math.ceil(finalPrice);
-        return total + (roundedFinalPrice * item.quantity);
-      }, 0);
+      const totalAmount = displayAmount; // Use the pre-calculated amount
 
       console.log('=== FRONTEND CALCULATION ===');
       console.log('Calculated Total Amount (Rupees):', totalAmount);
+      console.log('Calculated Total Amount (Paise):', totalAmount * 100);
       console.log('Design Items:', designItems);
 
       const designs = designItems.map(item => {
@@ -498,11 +508,19 @@ const Checkout = () => {
         address: user.address || contactForm.address,
         designs: designs,
         quantity: quantity,
-        totalAmount: totalAmount,
+        totalAmount: totalAmount, // Send amount in rupees to backend
         status: 'PENDING'
       };
 
+      console.log('=== SENDING TO BACKEND ===');
+      console.log('Total Amount sent to backend (rupees):', totalAmount);
+      
       const createdOrder = await createOrder(orderData);
+      
+      console.log('=== BACKEND RESPONSE ===');
+      console.log('Backend returned amount:', createdOrder.amount);
+      console.log('Our forced amount will be (paise):', totalAmount * 100);
+      
       initializeRazorpay(createdOrder, contactForm);
 
     } catch (error) {
@@ -847,28 +865,14 @@ const Checkout = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-sm">
                       <span>Subtotal</span>
-                      <span>₹{Math.ceil(designItems.reduce((total, item) => {
-                        const originalPrice = item.price;
-                        const discountPercentage = item.discountPrice || 0;
-                        const discountAmount = originalPrice * discountPercentage / 100;
-                        const finalPrice = originalPrice - discountAmount;
-                        const roundedFinalPrice = Math.ceil(finalPrice);
-                        return total + (roundedFinalPrice * item.quantity);
-                      }, 0))}</span>
+                      <span>₹{displayAmount}</span>
                     </div>
                     {designItems.some(item => item.discountPrice > 0) && (
                       <div className="flex justify-between items-center text-sm text-green-600">
                         <span>Total Savings</span>
                         <span>-₹{Math.ceil(
                           designItems.reduce((total, item) => total + (item.price * item.quantity), 0) -
-                          designItems.reduce((total, item) => {
-                            const originalPrice = item.price;
-                            const discountPercentage = item.discountPrice || 0;
-                            const discountAmount = originalPrice * discountPercentage / 100;
-                            const finalPrice = originalPrice - discountAmount;
-                            const roundedFinalPrice = Math.ceil(finalPrice);
-                            return total + (roundedFinalPrice * item.quantity);
-                          }, 0)
+                          displayAmount
                         )}</span>
                       </div>
                     )}
@@ -882,14 +886,7 @@ const Checkout = () => {
 
                   <div className="flex justify-between items-center font-bold text-lg">
                     <span>Total</span>
-                    <span className="text-primary">₹{Math.ceil(designItems.reduce((total, item) => {
-                      const originalPrice = item.price;
-                      const discountPercentage = item.discountPrice || 0;
-                      const discountAmount = originalPrice * discountPercentage / 100;
-                      const finalPrice = originalPrice - discountAmount;
-                      const roundedFinalPrice = Math.ceil(finalPrice);
-                      return total + (roundedFinalPrice * item.quantity);
-                    }, 0))}</span>
+                    <span className="text-primary">₹{displayAmount}</span>
                   </div>
 
                   <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
@@ -916,14 +913,7 @@ const Checkout = () => {
                         Processing Payment...
                       </div>
                     ) : (
-                      `Purchase Designs - ₹${Math.ceil(designItems.reduce((total, item) => {
-                        const originalPrice = item.price;
-                        const discountPercentage = item.discountPrice || 0;
-                        const discountAmount = originalPrice * discountPercentage / 100;
-                        const finalPrice = originalPrice - discountAmount;
-                        const roundedFinalPrice = Math.ceil(finalPrice);
-                        return total + (roundedFinalPrice * item.quantity);
-                      }, 0))}`
+                      `Purchase Designs - ₹${displayAmount}`
                     )}
                   </Button>
 
