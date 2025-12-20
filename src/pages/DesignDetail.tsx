@@ -4,7 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingCart, FileImage, Palette, ChevronLeft, ChevronRight, X } from "lucide-react";
+import {
+  ShoppingCart,
+  FileImage,
+  Palette,
+  ChevronLeft,
+  ChevronRight,
+  X,
+} from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AuthModal from "@/components/auth/AuthModal";
@@ -24,13 +31,16 @@ const DesignDetail = () => {
   const { addToCart } = useCart();
   const { user } = useAuth();
 
-  const { data: design, isLoading, error } = useQuery({
-    queryKey: ['design', designId],
+  const {
+    data: design,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["design", designId],
     queryFn: () => designApi.getDesignById(designId),
     enabled: !!designId,
   });
 
-  // Navigation functions for image gallery
   const goToNextImage = () => {
     if (design && design.imageUrls && design.imageUrls.length > 1) {
       setSelectedImageIndex((prev) =>
@@ -48,23 +58,17 @@ const DesignDetail = () => {
   };
 
   const handleImageClick = (index: number) => {
-    console.log(`Image clicked: index ${index}`);
     setSelectedImageIndex(index);
     setIsModalOpen(true);
   };
 
   const handleAddToCart = () => {
-    console.log("=== ADD TO CART - DESIGN DETAIL PAGE ===");
-    console.log("Design data received from API:", design);
-
     if (!user) {
-      console.log("User not authenticated, opening login modal");
       setIsAuthModalOpen(true);
       return;
     }
 
     if (!design) {
-      console.log("No design data available");
       toast({
         title: "Error",
         description: "Design information is not available.",
@@ -73,19 +77,16 @@ const DesignDetail = () => {
       return;
     }
 
-    console.log("=== CART DATA PREPARATION ===");
-
-    // Prepare cart data
     const cartData = {
-      type: 'design' as const,
+      type: "design" as const,
       designId: design.id,
       productId: design.id,
       title: design.designName,
       price: parseFloat(String(design.price)),
       discountPrice: design.discountPrice,
-      image: design.imageUrls?.[0] || '/placeholder.svg',
+      image: design.imageUrls?.[0] || "/placeholder.svg",
       category: design.category,
-      productType: 'DESIGN',
+      productType: "DESIGN",
       subcategory: design.subcategory,
       designedBy: design.designedBy,
       isPremium: design.isPremium,
@@ -94,37 +95,25 @@ const DesignDetail = () => {
       tags: design.tags,
       availableColors: design.availableColors,
       description: design.description,
-      material: '',
-      brand: 'Aza Arts',
-      weight: '',
-      dimensions: '',
-      careInstructions: '',
+      material: "",
+      brand: "Aza Arts",
+      weight: "",
+      dimensions: "",
+      careInstructions: "",
       fileSizePx: design.fileSizePx,
       fileSizeCm: design.fileSizeCm,
       dpi: design.dpi,
       includedFiles: design.includedFiles,
-      licenseType: design.licenseType
+      licenseType: design.licenseType,
     };
 
-    console.log("=== CART DATA ANALYSIS ===");
-    console.log("Cart data being sent:");
-    console.log(JSON.stringify(cartData, null, 2));
-
     try {
-      console.log("=== CALLING addToCart FUNCTION ===");
       addToCart(cartData);
-
-      console.log("=== CART ADDITION SUCCESS ===");
-      console.log("Successfully added design to cart with ID:", cartData.designId);
-
       toast({
         title: "Added to cart!",
         description: `${design.designName} has been added to your cart.`,
       });
     } catch (error) {
-      console.error("=== CART ADDITION ERROR ===");
-      console.error("Error adding design to cart:", error);
-
       toast({
         title: "Error",
         description: "Failed to add design to cart. Please try again.",
@@ -134,17 +123,14 @@ const DesignDetail = () => {
   };
 
   const handleAuthModalClose = () => {
-    console.log("Auth modal closed");
     setIsAuthModalOpen(false);
   };
 
   const handleImageModalClose = () => {
-    console.log("Image modal closed");
     setIsModalOpen(false);
   };
 
   if (isLoading) {
-    console.log("Loading design data...");
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -164,14 +150,17 @@ const DesignDetail = () => {
   }
 
   if (error || !design) {
-    console.error("Error loading design or design not found:", error);
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
-            <h1 className="text-2xl font-bold text-foreground mb-4">Design not found</h1>
-            <p className="text-muted-foreground">The design you're looking for doesn't exist or has been removed.</p>
+            <h1 className="text-2xl font-bold text-foreground mb-4">
+              Design not found
+            </h1>
+            <p className="text-muted-foreground">
+              The design you're looking for doesn't exist or has been removed.
+            </p>
           </div>
         </main>
         <Footer />
@@ -179,9 +168,128 @@ const DesignDetail = () => {
     );
   }
 
-  console.log("Rendering design detail for:", design.designName, "with ID:", design.id);
+  const hasMultipleImages =
+    design.imageUrls && design.imageUrls.length > 1;
 
-  const hasMultipleImages = design.imageUrls && design.imageUrls.length > 1;
+  // -------- LICENSE RENDER HELPER (NEW) ----------
+  const renderLicenseBlock = (licenseTypeRaw?: string) => {
+    if (!licenseTypeRaw) return null;
+
+    const lt = licenseTypeRaw.toLowerCase().trim();
+
+    // Common wrapper card for better UI
+    const Wrapper: React.FC<{ children: React.ReactNode }> = ({
+      children,
+    }) => (
+      <div className="rounded-lg border bg-gradient-to-br from-muted/80 via-background to-muted/40 p-4 md:p-5 space-y-3 shadow-sm">
+        <div className="inline-flex items-center gap-2 rounded-full bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+          License details
+        </div>
+        {children}
+      </div>
+    );
+
+    if (lt === "commercial") {
+      return (
+        <Wrapper>
+          <p className="text-sm text-foreground">
+            You may use AzaArts designs for personal and small-business
+            creative projects. Print on artwork, fabrics, accessories, or
+            décor items for resale. Original digital files may not be shared,
+            resold, or distributed.
+          </p>
+          <div>
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Notes / File Details
+            </p>
+            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+              <li>
+                • High-resolution TIFF / JPEG / PNG / AI / EPS files (per
+                listing).
+              </li>
+              <li>
+                • 300 / 150 DPI — ideal for art prints, fabrics, and
+                stationery.
+              </li>
+              <li>• Instant digital access via secure AzaArts link.</li>
+              <li>
+                • Colors may vary slightly depending on screen or printer.
+              </li>
+              <li>• Created with care by the AzaArts Creative Team.</li>
+            </ul>
+          </div>
+        </Wrapper>
+      );
+    }
+
+    if (lt === "extended") {
+      return (
+        <Wrapper>
+          <p className="text-sm text-foreground">
+            Includes personal and full commercial rights for physical and
+            digital end products. You may use these files to create printed
+            textiles, décor, stationery, and resale artwork.
+          </p>
+          <div>
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Notes / File Details
+            </p>
+            <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+              <li>
+                • High-resolution TIFF / JPEG / PNG / AI / EPS files.
+              </li>
+              <li>
+                • 300 / 150 DPI, suitable for large-scale printing and
+                production.
+              </li>
+              <li>• Instant access through secure AzaArts link.</li>
+              <li>
+                • Minor color variations may occur across devices.
+              </li>
+              <li>
+                • Professionally crafted and quality-checked by AzaArts
+                Studio.
+              </li>
+            </ul>
+          </div>
+        </Wrapper>
+      );
+    }
+
+    // default: personal / professional / anything else
+    return (
+      <Wrapper>
+        <p className="text-sm text-foreground">
+          Use AzaArts digital files for commercial production, product
+          development, or client projects. Designs can be incorporated into
+          your own original works or physical goods for sale. Resale or
+          redistribution of original files is not permitted.
+        </p>
+        <div>
+          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            Notes / File Details
+          </p>
+          <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+            <li>
+              • High-resolution TIFF / JPEG / PNG / AI / EPS (per listing
+              specs).
+            </li>
+            <li>
+              • 300 / 150 DPI or higher, optimized for production workflows.
+            </li>
+            <li>• Immediate access via AzaArts’ secure download link.</li>
+            <li>
+              • Colors may differ slightly based on printer or device.
+            </li>
+            <li>
+              • Delivered by AzaArts Design Studio — professional-grade
+              quality.
+            </li>
+          </ul>
+        </div>
+      </Wrapper>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -192,26 +300,34 @@ const DesignDetail = () => {
           {/* Images Section */}
           <div className="space-y-4">
             <div
-              className="aspect-square overflow-hidden rounded-lg border cursor-pointer select-none relative group"
+              className="aspect-square overflow-hidden rounded-lg border cursor-pointer select-none relative group bg-muted"
               onClick={() => handleImageClick(selectedImageIndex)}
-              onContextMenu={(e) => { e.preventDefault(); return false; }}
-              style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                return false;
+              }}
+              style={{ userSelect: "none", WebkitUserSelect: "none" }}
             >
               <img
-                src={design.imageUrls?.[selectedImageIndex] || '/placeholder.svg'}
+                src={design.imageUrls?.[selectedImageIndex] || "/placeholder.svg"}
                 alt={design.designName}
-                className="w-full h-full object-cover hover:scale-105 transition-smooth select-none"
-                onContextMenu={(e) => { e.preventDefault(); return false; }}
-                onDragStart={(e) => { e.preventDefault(); return false; }}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 ease-out select-none"
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  return false;
+                }}
+                onDragStart={(e) => {
+                  e.preventDefault();
+                  return false;
+                }}
                 draggable={false}
                 style={{
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  WebkitTouchCallout: 'none'
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                  WebkitTouchCallout: "none",
                 }}
               />
 
-              {/* Navigation Buttons - Only show if multiple images */}
               {hasMultipleImages && (
                 <>
                   <button
@@ -219,7 +335,7 @@ const DesignDetail = () => {
                       e.stopPropagation();
                       goToPreviousImage();
                     }}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 z-10"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/55 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/75 z-10"
                     aria-label="Previous image"
                   >
                     <ChevronLeft className="h-5 w-5" />
@@ -230,13 +346,13 @@ const DesignDetail = () => {
                       e.stopPropagation();
                       goToNextImage();
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 z-10"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/55 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/75 z-10"
                     aria-label="Next image"
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
 
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                     {selectedImageIndex + 1} / {design.imageUrls.length}
                   </div>
                 </>
@@ -249,25 +365,35 @@ const DesignDetail = () => {
                 {design.imageUrls.slice(0, 4).map((url, index) => (
                   <div
                     key={index}
-                    className={`aspect-square overflow-hidden rounded-lg border-2 cursor-pointer select-none transition-all ${selectedImageIndex === index
-                      ? 'border-primary ring-2 ring-primary/20'
-                      : 'border-border hover:border-primary/50'
-                      }`}
+                    className={`aspect-square overflow-hidden rounded-lg border-2 cursor-pointer select-none transition-all ${
+                      selectedImageIndex === index
+                        ? "border-primary ring-2 ring-primary/20"
+                        : "border-border hover:border-primary/50"
+                    }`}
                     onClick={() => setSelectedImageIndex(index)}
-                    onContextMenu={(e) => { e.preventDefault(); return false; }}
-                    style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      return false;
+                    }}
+                    style={{ userSelect: "none", WebkitUserSelect: "none" }}
                   >
                     <img
                       src={url}
                       alt={`${design.designName} ${index + 1}`}
                       className="w-full h-full object-cover select-none"
-                      onContextMenu={(e) => { e.preventDefault(); return false; }}
-                      onDragStart={(e) => { e.preventDefault(); return false; }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        return false;
+                      }}
+                      onDragStart={(e) => {
+                        e.preventDefault();
+                        return false;
+                      }}
                       draggable={false}
                       style={{
-                        userSelect: 'none',
-                        WebkitUserSelect: 'none',
-                        WebkitTouchCallout: 'none'
+                        userSelect: "none",
+                        WebkitUserSelect: "none",
+                        WebkitTouchCallout: "none",
                       }}
                     />
                   </div>
@@ -281,7 +407,7 @@ const DesignDetail = () => {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 {design.isPremium && (
-                  <Badge className="bg-gradient-primary text-primary-foreground" style={{ display: 'flex', opacity: 1, visibility: 'visible' }}>
+                  <Badge className="bg-gradient-to-r from-primary to-primary/70 text-primary-foreground">
                     Premium
                   </Badge>
                 )}
@@ -289,7 +415,9 @@ const DesignDetail = () => {
                   <Badge variant="secondary">Trending</Badge>
                 )}
                 {design.isNewArrival && (
-                  <Badge className="bg-accent text-accent-foreground">New Arrival</Badge>
+                  <Badge className="bg-accent text-accent-foreground">
+                    New Arrival
+                  </Badge>
                 )}
               </div>
 
@@ -297,7 +425,7 @@ const DesignDetail = () => {
                 {design.designName}
               </h1>
 
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mb-4">
                 <span>{design.category}</span>
                 <span>•</span>
                 <span>{design.subcategory}</span>
@@ -309,14 +437,21 @@ const DesignDetail = () => {
                 )}
               </div>
 
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-end gap-4 mb-6">
                 {design.discountPrice && design.discountPrice > 0 ? (
                   <>
                     <span className="text-2xl font-bold text-primary">
-                      ₹{Math.ceil(design.price - (design.price * design.discountPrice) / 100)}
+                      ₹
+                      {Math.ceil(
+                        design.price -
+                          (design.price * design.discountPrice) / 100
+                      )}
                     </span>
                     <span className="text-lg text-muted-foreground line-through">
                       ₹{Math.ceil(design.price)}
+                    </span>
+                    <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded-full">
+                      {design.discountPrice}% OFF
                     </span>
                   </>
                 ) : (
@@ -342,27 +477,42 @@ const DesignDetail = () => {
             {design.description && (
               <div>
                 <h3 className="font-semibold mb-2">Description</h3>
-                <p className="text-muted-foreground leading-relaxed">{design.description}</p>
+                <p className="text-muted-foreground leading-relaxed">
+                  {design.description}
+                </p>
               </div>
             )}
 
             {/* Design Specifications */}
             <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <FileImage className="h-4 w-4" />
-                  Design Specifications
-                </h3>
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <FileImage className="h-4 w-4 text-primary" />
+                    Design Specifications
+                  </h3>
+                  <span className="text-xs text-muted-foreground">
+                    Digital download • High-resolution artwork
+                  </span>
+                </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  {(design.fileSizePx || design.fileSizeCm || design.dpi) && (
+                <div className="grid gap-4 md:grid-cols-2 text-sm">
+                  {(design.fileSizePx ||
+                    design.fileSizeCm ||
+                    design.dpi) && (
                     <div className="space-y-1">
-                      <div className="text-muted-foreground">Size:</div>
-                      <div className="font-medium">
+                      <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        Size & Resolution
+                      </div>
+                      <div className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 font-medium text-xs">
                         {design.fileSizePx && `${design.fileSizePx} px`}
-                        {design.fileSizePx && design.fileSizeCm && " / "}
+                        {design.fileSizePx &&
+                          design.fileSizeCm &&
+                          " / "}
                         {design.fileSizeCm && `${design.fileSizeCm} cm`}
-                        {(design.fileSizePx || design.fileSizeCm) && design.dpi && " / "}
+                        {(design.fileSizePx || design.fileSizeCm) &&
+                          design.dpi &&
+                          " / "}
                         {design.dpi && `${design.dpi} dpi`}
                       </div>
                     </div>
@@ -370,43 +520,24 @@ const DesignDetail = () => {
 
                   {design.includedFiles && (
                     <div className="space-y-1">
-                      <div className="text-muted-foreground">Included Files:</div>
-                      <div className="font-medium">{design.includedFiles}</div>
-                    </div>
-                  )}
-
-                  {design.licenseType && (
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground">License:</div>
-                      <div className="font-medium">{design.licenseType}</div>
+                      <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        Included Files
+                      </div>
+                      <div className="rounded-md bg-muted px-2 py-1 font-medium text-xs">
+                        {design.includedFiles}
+                      </div>
                     </div>
                   )}
                 </div>
+
+                {/* License block with richer UI */}
+                {design.licenseType && (
+                  <div className="pt-2">
+                    {renderLicenseBlock(design.licenseType)}
+                  </div>
+                )}
               </CardContent>
             </Card>
-
-            {/* Available Colors */}
-            {/* {design.availableColors && design.availableColors.length > 0 && (
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <Palette className="h-4 w-4" />
-                    Featured Colors
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {design.availableColors.map((color, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <div
-                          className="h-6 w-6 rounded-full border"
-                          style={{ backgroundColor: color.toLowerCase() === 'white' ? '#ffffff' : color.toLowerCase() }}
-                        />
-                        <span className="text-sm capitalize">{color}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )} */}
 
             {/* Tags */}
             {design.tags && design.tags.length > 0 && (
@@ -425,24 +556,31 @@ const DesignDetail = () => {
         </div>
       </main>
 
-      {/* Custom Image Modal with Thumbnail Navigation */}
+      {/* Image Modal */}
       {isModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
           onClick={handleImageModalClose}
-          onContextMenu={(e) => { e.preventDefault(); return false; }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            return false;
+          }}
         >
           <div
             className="relative max-w-6xl w-full max-h-full flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
-            onContextMenu={(e) => { e.preventDefault(); return false; }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              return false;
+            }}
           >
-            {/* Close Button - Positioned on the image itself */}
             <div
               className="relative w-full flex justify-center mb-4"
-              onContextMenu={(e) => { e.preventDefault(); return false; }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                return false;
+              }}
             >
-              {/* Close Button - Now positioned on the image container */}
               <button
                 onClick={handleImageModalClose}
                 className="absolute top-4 right-4 z-20 bg-black/70 text-white p-2 rounded-full hover:bg-black/90 transition-colors shadow-lg"
@@ -451,7 +589,6 @@ const DesignDetail = () => {
                 <X className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
 
-              {/* Navigation Buttons */}
               {hasMultipleImages && (
                 <>
                   <button
@@ -471,36 +608,41 @@ const DesignDetail = () => {
                 </>
               )}
 
-              {/* Image Counter */}
               {hasMultipleImages && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-black/70 text-white px-3 py-1 rounded-full text-sm shadow-lg">
                   {selectedImageIndex + 1} / {design.imageUrls.length}
                 </div>
               )}
 
-              {/* Main Image */}
               <img
-                src={design.imageUrls?.[selectedImageIndex] || '/placeholder.svg'}
+                src={design.imageUrls?.[selectedImageIndex] || "/placeholder.svg"}
                 alt={`${design.designName} ${selectedImageIndex + 1}`}
                 className="max-w-full max-h-[70vh] object-contain rounded-lg select-none"
                 draggable={false}
-                onContextMenu={(e) => { e.preventDefault(); return false; }}
-                onDragStart={(e) => { e.preventDefault(); return false; }}
-                onMouseDown={(e) => { if (e.button === 2) e.preventDefault(); }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  return false;
+                }}
+                onDragStart={(e) => {
+                  e.preventDefault();
+                  return false;
+                }}
+                onMouseDown={(e) => {
+                  if (e.button === 2) e.preventDefault();
+                }}
                 style={{
-                  width: 'auto',
-                  height: 'auto',
-                  maxWidth: '100%',
-                  maxHeight: '70vh',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  WebkitTouchCallout: 'none',
-                  pointerEvents: 'auto'
+                  width: "auto",
+                  height: "auto",
+                  maxWidth: "100%",
+                  maxHeight: "70vh",
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                  WebkitTouchCallout: "none",
+                  pointerEvents: "auto",
                 }}
               />
             </div>
 
-            {/* Thumbnail Navigation - Below the main image */}
             {hasMultipleImages && (
               <div className="bg-black/50 backdrop-blur-sm rounded-lg p-3 sm:p-4 w-full max-w-2xl mt-2">
                 <div className="flex gap-2 overflow-x-auto justify-center">
@@ -508,23 +650,33 @@ const DesignDetail = () => {
                     <button
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
-                      className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded border-2 transition-all ${selectedImageIndex === index
-                        ? 'border-primary ring-2 ring-primary/50 scale-110'
-                        : 'border-gray-300 hover:border-primary/50'
-                        }`}
-                      onContextMenu={(e) => { e.preventDefault(); return false; }}
+                      className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded border-2 transition-all ${
+                        selectedImageIndex === index
+                          ? "border-primary ring-2 ring-primary/50 scale-110"
+                          : "border-gray-300 hover:border-primary/50"
+                      }`}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        return false;
+                      }}
                     >
                       <img
                         src={url}
                         alt={`Thumbnail ${index + 1}`}
                         className="w-full h-full object-cover rounded select-none"
                         draggable={false}
-                        onContextMenu={(e) => { e.preventDefault(); return false; }}
-                        onDragStart={(e) => { e.preventDefault(); return false; }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          return false;
+                        }}
+                        onDragStart={(e) => {
+                          e.preventDefault();
+                          return false;
+                        }}
                         style={{
-                          userSelect: 'none',
-                          WebkitUserSelect: 'none',
-                          WebkitTouchCallout: 'none'
+                          userSelect: "none",
+                          WebkitUserSelect: "none",
+                          WebkitTouchCallout: "none",
                         }}
                       />
                     </button>
@@ -536,8 +688,6 @@ const DesignDetail = () => {
         </div>
       )}
 
-
-      {/* Authentication Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={handleAuthModalClose}

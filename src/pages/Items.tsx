@@ -195,9 +195,9 @@ const Items = () => {
       if (licenseType && licenseType !== 'all') {
         const designLicense = (design.licenseType || '').toLowerCase();
         const selectedLicenseLower = licenseType.toLowerCase();
-        
-        passesLicenseFilter = designLicense.includes(selectedLicenseLower) || 
-                             selectedLicenseLower.includes(designLicense);
+
+        passesLicenseFilter = designLicense.includes(selectedLicenseLower) ||
+          selectedLicenseLower.includes(designLicense);
       }
 
       return passesColorFilter && passesCategoryFilter && passesSubcategoryFilter && passesLicenseFilter;
@@ -719,14 +719,21 @@ const Items = () => {
               )}
             </div>
 
-            {/* File specifications */}
-            <div className="flex items-start justify-start gap-1 mt-2 text-xs font-medium text-muted-foreground">
-              <span>{design.fileSizePx}px</span>
-              <span>/</span>
-              <span>{design.fileSizeCm}cm</span>
-              <span>/</span>
-              <span>{design.dpi}dpi</span>
-            </div>
+            {/* File specifications – show only if NOT all 0 */}
+            {!(
+              Number(design.fileSizePx) === 0 &&
+              Number(design.fileSizeCm) === 0 &&
+              Number(design.dpi) === 0
+            ) && (
+                <div className="flex items-start justify-start gap-1 mt-2 text-xs font-medium text-muted-foreground">
+                  <span>{design.fileSizePx}px</span>
+                  <span>/</span>
+                  <span>{design.fileSizeCm}cm</span>
+                  <span>/</span>
+                  <span>{design.dpi}dpi</span>
+                </div>
+              )}
+
           </div>
 
           {viewMode === 'list' && (
