@@ -4,27 +4,30 @@ import { useTrendingDesigns } from "@/hooks/useDesigns";
 import { useNavigate } from "react-router-dom";
 
 const TrendingCollections = () => {
-  const { data: trendingData, isLoading, error } = useTrendingDesigns({ size: 6 });
+  const { data: trendingData, isLoading, error } = useTrendingDesigns({
+    size: 6,
+  });
   const navigate = useNavigate();
 
   const handleNavigate = (category?: string, subcategory?: string) => {
     console.log("Navigating to items with:", { category, subcategory });
     const params = new URLSearchParams();
     if (category) params.set("category", category);
-    if (subcategory && subcategory !== "n") params.set("subcategory", subcategory);
+    if (subcategory && subcategory !== "n")
+      params.set("subcategory", subcategory);
     // navigate(`/items?${params.toString()}`);
     navigate(`/items`);
   };
 
-  // ✅ Keep numeric values, don’t prefix ₹ yet
+  // Keep numeric values, don’t prefix ₹ yet
   const trendingDesigns =
     trendingData?.content?.slice(0, 6).map((design) => ({
       id: design.id,
       title: design.designName,
       category: design.category,
       subcategory: design.subcategory,
-      price: Number(design.price), // keep number
-      discountPrice: Number(design.discountPrice) || 0, // keep number
+      price: Number(design.price),
+      discountPrice: Number(design.discountPrice) || 0,
       image: design.imageUrls?.[0] || "/placeholder.svg",
       isPremium: design.isPremium,
       isTrending: design.isTrending,
@@ -90,14 +93,25 @@ const TrendingCollections = () => {
           {trendingDesigns.map((design, index) => {
             const discountedPrice =
               design.discountPrice > 0
-                ? Math.round(design.price - (design.price * design.discountPrice) / 100)
+                ? Math.round(
+                    design.price -
+                      (design.price * design.discountPrice) / 100
+                  )
                 : null;
+
+            // hide specs only when all three are 0 / null / undefined
+            const hideSpecs =
+              (!design.fileSizePx || Number(design.fileSizePx) === 0) &&
+              (!design.fileSizeCm || Number(design.fileSizeCm) === 0) &&
+              (!design.dpi || Number(design.dpi) === 0);
 
             return (
               <Card
                 key={design.id || index}
                 className="group overflow-hidden hover:shadow-elegant transition-all duration-300 cursor-pointer"
-                onClick={() => handleNavigate(design.category, design.subcategory)}
+                onClick={() =>
+                  handleNavigate(design.category, design.subcategory)
+                }
               >
                 <CardContent className="p-0">
                   <div className="relative overflow-hidden rounded-lg">
@@ -115,7 +129,9 @@ const TrendingCollections = () => {
                       <div className="flex items-center gap-2">
                         {discountedPrice ? (
                           <>
-                            <p className="text-primary font-semibold">₹{discountedPrice}</p>
+                            <p className="text-primary font-semibold">
+                              ₹{discountedPrice}
+                            </p>
                             <p className="text-xs text-muted-foreground line-through">
                               ₹{Math.round(design.price)}
                             </p>
@@ -133,13 +149,22 @@ const TrendingCollections = () => {
                       )}
                     </div>
 
-                    <div className="flex items-start justify-start gap-1 mt-3">
-                      <p className="text-xs font-semibold text-foreground">{design.fileSizePx} px</p>
-                      <span>/</span>
-                      <p className="text-xs font-semibold text-foreground">{design.fileSizeCm} cm</p>
-                      <span>/</span>
-                      <p className="text-xs font-semibold text-foreground">{design.dpi} dpi</p>
-                    </div>
+                    {/* specs as before, but hidden when all 3 are 0/null */}
+                    {!hideSpecs && (
+                      <div className="flex items-start justify-start gap-1 mt-3">
+                        <p className="text-xs font-semibold text-foreground">
+                          {design.fileSizePx} px
+                        </p>
+                        <span>/</span>
+                        <p className="text-xs font-semibold text-foreground">
+                          {design.fileSizeCm} cm
+                        </p>
+                        <span>/</span>
+                        <p className="text-xs font-semibold text-foreground">
+                          {design.dpi} dpi
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

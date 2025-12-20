@@ -29,7 +29,8 @@ const PremiumSection = () => {
     premiumData?.content?.slice(0, 4).map((design) => {
       const discount = Number(design.discountPrice) || 0;
       const finalPrice = discount
-        ? Number(design.price) - (Number(design.price) * discount) / 100
+        ? Number(design.price) -
+          (Number(design.price) * discount) / 100
         : Number(design.price);
 
       return {
@@ -99,62 +100,74 @@ const PremiumSection = () => {
             {/* Premium Design Grid */}
             {premiumDesigns.length > 0 && (
               <div className="grid grid-cols-2 gap-2 mb-3">
-                {premiumDesigns.map((design, index) => (
-                  <Card
-                    key={design.id || index}
-                    onClick={() => handleViewDesign(design)}
-                    className="group overflow-hidden hover:shadow-elegant transition-all duration-300 cursor-pointer"
-                  >
-                    <CardContent className="p-0">
-                      <div className="relative overflow-hidden h-40">
-                        <img
-                          src={design.image}
-                          alt={design.title}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        />
-                      </div>
-                      <div className="p-2">
-                        <h4 className="font-medium text-sm text-foreground mb-1 truncate">
-                          {design.title}
-                        </h4>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <p className="text-primary font-semibold text-sm">
-                              ₹{Math.round(design.finalPrice)}
-                            </p>
-                            {design.discountPercent > 0 && (
-                              <p className="text-xs text-muted-foreground line-through">
-                                ₹{design.price.toFixed(2)}
+                {premiumDesigns.map((design, index) => {
+                  // hide specs only when all three are 0 / null / undefined
+                  const hideSpecs =
+                    (!design.fileSizePx || Number(design.fileSizePx) === 0) &&
+                    (!design.fileSizeCm || Number(design.fileSizeCm) === 0) &&
+                    (!design.dpi || Number(design.dpi) === 0);
+
+                  return (
+                    <Card
+                      key={design.id || index}
+                      onClick={() => handleViewDesign(design)}
+                      className="group overflow-hidden hover:shadow-elegant transition-all duration-300 cursor-pointer"
+                    >
+                      <CardContent className="p-0">
+                        <div className="relative overflow-hidden h-40">
+                          <img
+                            src={design.image}
+                            alt={design.title}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                          />
+                        </div>
+                        <div className="p-2">
+                          <h4 className="font-medium text-sm text-foreground mb-1 truncate">
+                            {design.title}
+                          </h4>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <p className="text-primary font-semibold text-sm">
+                                ₹{Math.round(design.finalPrice)}
                               </p>
-                            )}
+                              {design.discountPercent > 0 && (
+                                <p className="text-xs text-muted-foreground line-through">
+                                  ₹{design.price.toFixed(2)}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCategoryClick(design.subcategory);
+                              }}
+                              className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              {design.subcategory}
+                            </button>
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCategoryClick(design.subcategory);
-                            }}
-                            className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                          >
-                            {design.subcategory}
-                          </button>
+
+                          {/* specs as before, but hidden when all three are 0/null */}
+                          {!hideSpecs && (
+                            <div className="flex items-start justify-start gap-1 mt-3">
+                              <p className="text-xs font-semibold text-foreground">
+                                {design.fileSizePx} px
+                              </p>
+                              <span>/</span>
+                              <p className="text-xs font-semibold text-foreground">
+                                {design.fileSizeCm} cm
+                              </p>
+                              <span>/</span>
+                              <p className="text-xs font-semibold text-foreground">
+                                {design.dpi} dpi
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-start justify-start gap-1 mt-3">
-                          <p className="text-xs font-semibold text-foreground">
-                            {design.fileSizePx} px
-                          </p>
-                          <span>/</span>
-                          <p className="text-xs font-semibold text-foreground">
-                            {design.fileSizeCm} cm
-                          </p>
-                          <span>/</span>
-                          <p className="text-xs font-semibold text-foreground">
-                            {design.dpi} dpi
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
 
