@@ -780,7 +780,7 @@ const Checkout = () => {
                       type="tel"
                       value={contactForm.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="+91 98765 43210"
+                      placeholder="Enter Your Phone number"
                       required
                     />
                   </div>

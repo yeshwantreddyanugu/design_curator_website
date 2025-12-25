@@ -172,7 +172,7 @@ const PaymentPage = () => {
       console.log("🌐 Purchase data:", purchaseData);
 
       const orderPayload = {
-        uid: user.uid, // Added: User ID from authenticated user
+        uid: user.uid,
         productId: purchaseData.productId,
         customerName: customerDetails.customerName,
         customerEmail: customerDetails.customerEmail,
@@ -181,13 +181,24 @@ const PaymentPage = () => {
         quantity: purchaseData.quantity,
         selectedColor: purchaseData.selectedColor,
         selectedSize: purchaseData.selectedSize,
-        unitPrice: purchaseData.price ,
+        unitPrice: purchaseData.price,
         paymentMethod: "razorpay",
         orderNotes: customerDetails.orderNotes
       };
 
       console.log("📤 Order payload prepared (with uid):", JSON.stringify(orderPayload, null, 2));
-      console.log("📤 Sending POST request to: https://a39ce974f7a4.ngrok-free.app/api/orders/products");
+      
+      // Log price calculations
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log("💰 FRONTEND PRICE CALCULATION:");
+      console.log("  - Unit Price (sent to backend):", purchaseData.price, "INR");
+      console.log("  - Quantity:", purchaseData.quantity);
+      console.log("  - Total Amount (from ProductDetail):", purchaseData.totalAmount, "INR");
+      console.log("  - Calculated Total (price × qty):", purchaseData.price * purchaseData.quantity, "INR");
+      console.log("  - Match?", purchaseData.totalAmount === (purchaseData.price * purchaseData.quantity));
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      
+      console.log("📤 Sending POST request to: https://2711fc66c774.ngrok-free.app/api/orders/products");
 
       const response = await fetch('https://az.lytortech.com/api/orders/products', {
         method: 'POST',
@@ -209,6 +220,34 @@ const PaymentPage = () => {
         result = JSON.parse(responseText);
         console.log("📥 Parsed response object:", result);
         console.log("📥 result.order structure:", result.order);
+        
+        // Detailed order response logging
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.log("📋 FULL BACKEND ORDER RESPONSE:");
+        console.log("  - Success:", result.success);
+        console.log("  - Message:", result.message);
+        console.log("  - Order Object:", JSON.stringify(result.order, null, 2));
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        
+        // Log all order fields
+        if (result.order) {
+          console.log("🔍 DETAILED BACKEND ORDER FIELDS:");
+          Object.keys(result.order).forEach(key => {
+            console.log(`  - ${key}:`, result.order[key], `(type: ${typeof result.order[key]})`);
+          });
+          
+          // CRITICAL: Check backend amount fields
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          console.log("💰 BACKEND AMOUNT FIELDS (CRITICAL):");
+          console.log("  - totalAmount:", result.order?.totalAmount);
+          console.log("  - unitPrice:", result.order?.unitPrice);
+          console.log("  - quantity:", result.order?.quantity);
+          console.log("  - amount:", result.order?.amount);
+          console.log("  - razorpayAmount:", result.order?.razorpayAmount);
+          console.log("  ⚠️  IMPORTANT: Check if backend already converted to paise");
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        }
+        
       } catch (parseError) {
         console.error("❌ Failed to parse response as JSON");
         console.error("❌ Parse error:", parseError);
@@ -218,17 +257,17 @@ const PaymentPage = () => {
       if (response.ok && result.success) {
         console.log("✅ Response indicates success");
 
-        // Extract different IDs from the response
-        const databaseId = result.order?.id; // Database ID (e.g., 59)
-        const orderId = result.order?.orderId; // Formatted order ID (e.g., "ORD-20251018-000014")
+        const databaseId = result.order?.id;
+        const orderId = result.order?.orderId;
         const razorpayOrderId = result.order?.razorpayOrderId;
 
         console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        console.log("👤 USER ID (uid):", user.uid);
-        console.log("📦 PRODUCT ID (from ProductDetail):", purchaseData.productId);
-        console.log("🆔 DATABASE ID (internal):", databaseId);
-        console.log("📋 ORDER ID (formatted):", orderId);
-        console.log("💳 RAZORPAY ORDER ID:", razorpayOrderId);
+        console.log("📋 EXTRACTED IDs FROM BACKEND:");
+        console.log("  - USER ID (uid):", user.uid);
+        console.log("  - PRODUCT ID:", purchaseData.productId);
+        console.log("  - DATABASE ID:", databaseId);
+        console.log("  - ORDER ID (formatted):", orderId);
+        console.log("  - RAZORPAY ORDER ID:", razorpayOrderId);
         console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
         if (!orderId || !razorpayOrderId || !databaseId) {
@@ -236,14 +275,10 @@ const PaymentPage = () => {
           console.error("❌ orderId:", orderId);
           console.error("❌ razorpayOrderId:", razorpayOrderId);
           console.error("❌ databaseId:", databaseId);
-          console.error("❌ Full result.order:", result.order);
           throw new Error('Missing orderId or razorpayOrderId in response');
         }
 
         console.log("✅ Order created successfully");
-        console.log("✅ Formatted Order ID:", orderId);
-        console.log("✅ Razorpay Order ID:", razorpayOrderId);
-        console.log("✅ Database ID:", databaseId);
         console.log("🚀 === createOrderAndGetRazorpayId COMPLETED SUCCESSFULLY ===");
 
         return { orderId, razorpayOrderId, databaseId };
@@ -261,33 +296,30 @@ const PaymentPage = () => {
     }
   };
 
-
   // Verify payment after Razorpay success
   const verifyPayment = async (
-    orderId: string, // Now using formatted order ID string
+    orderId: string,
     razorpayOrderId: string,
     razorpayPaymentId: string,
     razorpaySignature: string
   ): Promise<PaymentResult> => {
     console.log("🚀 === verifyPayment STARTED ===");
-    console.log("📥 Parameters received:");
-    console.log("   - orderId (formatted):", orderId);
-    console.log("   - razorpayOrderId:", razorpayOrderId);
-    console.log("   - razorpayPaymentId:", razorpayPaymentId);
-    console.log("   - razorpaySignature:", razorpaySignature);
+    console.log("📥 Parameters:");
+    console.log("  - orderId (formatted):", orderId);
+    console.log("  - razorpayOrderId:", razorpayOrderId);
+    console.log("  - razorpayPaymentId:", razorpayPaymentId);
+    console.log("  - razorpaySignature:", razorpaySignature);
 
     try {
-      console.log("🌐 Preparing to verify payment with backend...");
-
       const verificationPayload = {
-        orderId: orderId, // Formatted order ID like "ORD-20251018-000014"
+        orderId: orderId,
         razorpayOrderId: razorpayOrderId,
         razorpayPaymentId: razorpayPaymentId,
         razorpaySignature: razorpaySignature
       };
 
-      console.log("📤 Verification payload prepared:", JSON.stringify(verificationPayload, null, 2));
-      console.log("📤 Sending POST request to: https://a39ce974f7a4.ngrok-free.app/api/orders/products/verify-payment");
+      console.log("📤 Verification payload:", JSON.stringify(verificationPayload, null, 2));
+      console.log("📤 Sending to: https://2711fc66c774.ngrok-free.app/api/orders/products/verify-payment");
 
       const response = await fetch('https://az.lytortech.com/api/orders/products/verify-payment', {
         method: 'POST',
@@ -298,21 +330,18 @@ const PaymentPage = () => {
         body: JSON.stringify(verificationPayload)
       });
 
-      console.log("📥 Verification response received - Status:", response.status, response.statusText);
-      console.log("📥 Response OK:", response.ok);
+      console.log("📥 Verification response - Status:", response.status, response.statusText);
 
       const responseText = await response.text();
-      console.log("📥 Raw verification response text:", responseText);
+      console.log("📥 Raw verification response:", responseText);
 
       let result;
       try {
         result = JSON.parse(responseText);
-        console.log("📥 Parsed verification response object:", result);
+        console.log("📥 Parsed verification response:", result);
       } catch (parseError) {
-        console.error("❌ Failed to parse verification response as JSON");
+        console.error("❌ Failed to parse verification response");
         console.error("❌ Parse error:", parseError);
-        console.error("❌ Response text was:", responseText);
-        console.log("🚀 === verifyPayment COMPLETED WITH PARSE ERROR ===");
         return {
           success: false,
           message: 'Invalid verification response from server',
@@ -332,9 +361,8 @@ const PaymentPage = () => {
 
       return verificationResult;
     } catch (error) {
-      console.error("❌ === verifyPayment FAILED WITH EXCEPTION ===");
-      console.error("❌ Error object:", error);
-      console.error("❌ Error message:", error instanceof Error ? error.message : 'Unknown error');
+      console.error("❌ === verifyPayment FAILED ===");
+      console.error("❌ Error:", error);
       return {
         success: false,
         message: 'Payment verification failed',
@@ -343,7 +371,7 @@ const PaymentPage = () => {
     }
   };
 
-  // Handle Razorpay payment
+  // Handle Razorpay payment - FIXED: No multiplication, backend already converts
   const initiateRazorpayPayment = (razorpayOrderId: string, formattedOrderId: string) => {
     console.log("🚀 === initiateRazorpayPayment STARTED ===");
     console.log("💳 Razorpay Order ID:", razorpayOrderId);
@@ -357,13 +385,21 @@ const PaymentPage = () => {
       if (window.Razorpay) {
         console.log("✅ Razorpay SDK is available on window object");
 
-        const calculatedAmount = purchaseData!.totalAmount * 100;
-        console.log("💰 Total amount (INR):", purchaseData!.totalAmount);
-        console.log("💰 Amount for Razorpay (paisa):", calculatedAmount);
+        // FIXED: Do NOT multiply by 100 - Backend already sends amount in paise
+        const razorpayAmount = purchaseData!.totalAmount;
+        
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.log("💰 RAZORPAY AMOUNT CALCULATION:");
+        console.log("  - purchaseData.totalAmount:", purchaseData!.totalAmount);
+        console.log("  - Amount sent to Razorpay:", razorpayAmount);
+        console.log("  - Expected display in Razorpay: ₹" + (razorpayAmount / 100).toFixed(2));
+        console.log("  - ⚠️  NO MULTIPLICATION - Backend already converted to paise");
+        console.log("  - If showing wrong amount, check backend conversion");
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
         const options = {
           key: 'rzp_live_RLWX63Wyr3DnEa',
-          amount: calculatedAmount,
+          amount: razorpayAmount, // Backend already converted to paise
           currency: 'INR',
           name: 'Aza Arts',
           description: `Purchase: ${purchaseData!.productName}`,
@@ -380,9 +416,8 @@ const PaymentPage = () => {
             setIsProcessing(true);
 
             console.log("🚀 Calling verifyPayment with formatted orderId:", formattedOrderId);
-            // Verify payment with backend (using formatted order ID)
             const verificationResult = await verifyPayment(
-              formattedOrderId, // Using formatted order ID like "ORD-20251018-000014"
+              formattedOrderId,
               response.razorpay_order_id,
               response.razorpay_payment_id,
               response.razorpay_signature
@@ -442,16 +477,12 @@ const PaymentPage = () => {
           }
         };
 
-        console.log("💳 Razorpay options configured:", {
-          key: options.key.substring(0, 10) + "...", // Mask key
-          amount: options.amount,
-          currency: options.currency,
-          name: options.name,
-          description: options.description,
-          order_id: options.order_id,
-          prefill: options.prefill,
-          notes: options.notes
-        });
+        console.log("💳 Razorpay options configured:");
+        console.log("  - key:", options.key.substring(0, 10) + "...");
+        console.log("  - amount:", options.amount, "paise");
+        console.log("  - currency:", options.currency);
+        console.log("  - order_id:", options.order_id);
+        console.log("  - Expected display: ₹" + (options.amount / 100).toFixed(2));
 
         try {
           console.log("💳 Creating new Razorpay instance...");
@@ -506,7 +537,6 @@ const PaymentPage = () => {
     setIsProcessing(true);
 
     try {
-      // Create order and get orderId, razorpayOrderId, and databaseId
       console.log("🚀 === STEP 1: Creating order and getting IDs ===");
       const orderData = await createOrderAndGetRazorpayId();
 
@@ -525,7 +555,6 @@ const PaymentPage = () => {
       console.log("🔄 Closing form modal");
       setIsFormModalOpen(false);
 
-      // Open Razorpay payment
       console.log("🚀 === STEP 2: Opening Razorpay payment interface ===");
       initiateRazorpayPayment(razorpayOrderId, orderId);
 
@@ -552,7 +581,7 @@ const PaymentPage = () => {
     console.log("📦 handleViewOrders called");
     console.log("🔄 Closing payment modal");
     setIsPaymentModalOpen(false);
-    console.log("🔄 Navigating to /user-orders");
+    console.log("🔄 Navigating to /orders");
     navigate('/orders');
   };
 
@@ -560,7 +589,7 @@ const PaymentPage = () => {
     console.log("🛍️ handleContinueShopping called");
     console.log("🔄 Closing payment modal");
     setIsPaymentModalOpen(false);
-    console.log("🔄 Navigating to /allProductItems");
+    console.log("🔄 Navigating to /");
     navigate('/');
   };
 
@@ -569,6 +598,11 @@ const PaymentPage = () => {
     console.log("🔄 Closing payment modal");
     setIsPaymentModalOpen(false);
     console.log("🔄 Navigating back");
+    navigate(-1);
+  };
+
+  const handleGoBack = () => {
+    console.log("⬅️ handleGoBack called - navigating back");
     navigate(-1);
   };
 
@@ -602,11 +636,6 @@ const PaymentPage = () => {
 
     console.log("✅ Redirect check passed - user and purchase data present");
   }, [purchaseData, user, navigate, toast]);
-
-  const handleGoBack = () => {
-    console.log("⬅️ handleGoBack called - navigating back");
-    navigate(-1);
-  };
 
   if (!purchaseData || !user) {
     console.log("⚠️ Component rendering null - missing purchaseData or user");
@@ -814,8 +843,6 @@ const PaymentPage = () => {
       </Dialog>
 
       {/* Payment Result Modal */}
-      {/* Payment Result Modal - Enhanced Design */}
-      {/* Payment Result Modal - Fixed Visibility */}
       <Dialog open={isPaymentModalOpen} onOpenChange={() => {
         console.log("🔄 Payment modal onOpenChange triggered");
         setIsPaymentModalOpen(false);
@@ -992,8 +1019,6 @@ const PaymentPage = () => {
           )}
         </DialogContent>
       </Dialog>
-
-
     </div>
   );
 };

@@ -367,7 +367,7 @@ const ProductDetail = () => {
               <img
                 src={productData.imageUrls?.[0] || '/placeholder.svg'}
                 alt={productData.productName}
-                className="w-full h-full object-cover hover:scale-105 transition-smooth select-none"
+                className="w-full h-full object-contain hover:scale-105 transition-smooth select-none"
                 onContextMenu={(e) => { e.preventDefault(); return false; }}
                 onDragStart={(e) => { e.preventDefault(); return false; }}
                 draggable={false}
