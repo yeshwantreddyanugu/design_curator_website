@@ -3,13 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { usePremiumDesigns } from "@/hooks/useDesigns";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
 import premiumCollection from "@/assets/premium-collection.jpg";
 
 const PremiumSection = () => {
   const { data: premiumData, isLoading } = usePremiumDesigns({ size: 4 });
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleViewDesign = (design: any) => {
     if (design.id) {
@@ -17,7 +15,8 @@ const PremiumSection = () => {
     }
   };
 
-  const handleCategoryClick = (subcategory: string) => {
+  const handleCategoryClick = (e: React.MouseEvent, subcategory: string) => {
+    e.stopPropagation();
     navigate(
       `/items?type=designs&subcategory=${encodeURIComponent(
         subcategory
@@ -30,7 +29,7 @@ const PremiumSection = () => {
       const discount = Number(design.discountPrice) || 0;
       const finalPrice = discount
         ? Number(design.price) -
-          (Number(design.price) * discount) / 100
+        (Number(design.price) * discount) / 100
         : Number(design.price);
 
       return {
@@ -99,7 +98,7 @@ const PremiumSection = () => {
 
             {/* Premium Design Grid */}
             {premiumDesigns.length > 0 && (
-              <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="grid grid-cols-2 gap-2">
                 {premiumDesigns.map((design, index) => {
                   // hide specs only when all three are 0 / null / undefined
                   const hideSpecs =
@@ -136,15 +135,14 @@ const PremiumSection = () => {
                                 </p>
                               )}
                             </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCategoryClick(design.subcategory);
-                              }}
-                              className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                            >
-                              {design.subcategory}
-                            </button>
+                            {design.subcategory !== "n" && (
+                              <button
+                                onClick={(e) => handleCategoryClick(e, design.subcategory)}
+                                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                {design.subcategory}
+                              </button>
+                            )}
                           </div>
 
                           {/* specs as before, but hidden when all three are 0/null */}
@@ -170,14 +168,6 @@ const PremiumSection = () => {
                 })}
               </div>
             )}
-
-            <Button
-              size="sm"
-              className="bg-gradient-primary text-primary-foreground hover:opacity-90"
-              onClick={() => navigate("/items?type=designs&premium=true")}
-            >
-              Explore Premium Collection
-            </Button>
           </div>
 
           {/* Hero Image */}
@@ -192,6 +182,17 @@ const PremiumSection = () => {
             <div className="absolute -top-4 -left-4 w-12 lg:w-16 h-12 lg:h-16 bg-gradient-primary rounded-full opacity-20 animate-pulse"></div>
             <div className="absolute -bottom-2 -right-2 w-10 lg:w-12 h-10 lg:h-12 bg-gradient-secondary rounded-full opacity-30 animate-pulse delay-700"></div>
           </div>
+        </div>
+
+        {/* Button moved OUTSIDE the grid - centered at bottom */}
+        <div className="text-center mt-6">
+          <Button
+            size="sm"
+            className="bg-gradient-primary text-black font-semibold hover:opacity-90"
+            onClick={() => navigate("/items?type=designs&premium=true")}
+          >
+            Explore Premium Collection
+          </Button>
         </div>
       </div>
     </section>

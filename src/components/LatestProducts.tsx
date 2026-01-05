@@ -241,7 +241,7 @@ const LatestProducts = () => {
                       <img
                         src={product.image}
                         alt={product.title}
-                        className="w-full h-56 object-cover transition-smooth group-hover:scale-110"
+                        className="w-full h-56 object-contain bg-white transition-smooth group-hover:scale-110"
                       />
                       <div className="absolute top-3 right-3 flex gap-2">
                         <Badge

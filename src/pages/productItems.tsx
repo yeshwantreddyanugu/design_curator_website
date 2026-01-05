@@ -452,7 +452,7 @@ const Products = () => {
             <img
               src={product.imageUrls?.[0] || '/placeholder.svg'}
               alt={product.productName}
-              className={`w-full object-cover transition-smooth group-hover:scale-110 ${viewMode === 'grid' ? 'h-64' : 'h-32'
+              className={`w-full object-contain transition-smooth group-hover:scale-110 ${viewMode === 'grid' ? 'h-64' : 'h-32'
                 }`}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-smooth" />

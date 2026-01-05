@@ -1,15 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useNewArrivalDesigns } from "@/hooks/useDesigns";
 import DownloadButton from "@/components/DownloadButton";
 import patternGrid from "@/assets/pattern-grid.jpg";
-import { useNavigate } from "react-router-dom"; // Add this import
+import { useNavigate } from "react-router-dom";
 
 const NewArrivals = () => {
   const { data: newArrivalsData, isLoading, error } = useNewArrivalDesigns({ size: 6 });
-  const navigate = useNavigate(); // Add this hook
+  const navigate = useNavigate();
 
-  // Add this function to handle design clicks
+  // Handle design clicks
   const handleViewDesign = (design: any) => {
     if (design.id) {
       navigate(`/design/${design.id}`);
@@ -94,8 +95,8 @@ const NewArrivals = () => {
           {newArrivals.map((item, index) => (
             <Card 
               key={index} 
-              className="group pattern-hover border-0 shadow-soft cursor-pointer" // Add cursor-pointer
-              onClick={() => handleViewDesign(item)} // Add onClick handler
+              className="group pattern-hover border-0 shadow-soft cursor-pointer"
+              onClick={() => handleViewDesign(item)}
             >
               <CardContent className="p-0">
                 <div className="relative overflow-hidden rounded-lg">
@@ -139,9 +140,14 @@ const NewArrivals = () => {
         </div>
 
         <div className="text-center mt-10">
-          <button className="text-primary hover:text-primary-muted font-semibold transition-smooth">
-            View All New Arrivals →
-          </button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/items?type=designs&new=true")}
+            className="bg-gradient-primary text-black font-semibold hover:opacity-90"
+          >
+            View All New Arrivals
+          </Button>
         </div>
       </div>
     </section>

@@ -9,17 +9,14 @@ const TrendingCollections = () => {
   });
   const navigate = useNavigate();
 
-  const handleNavigate = (category?: string, subcategory?: string) => {
-    console.log("Navigating to items with:", { category, subcategory });
-    const params = new URLSearchParams();
-    if (category) params.set("category", category);
-    if (subcategory && subcategory !== "n")
-      params.set("subcategory", subcategory);
-    // navigate(`/items?${params.toString()}`);
-    navigate(`/items`);
+  // Navigate to specific design detail page
+  const handleViewDesign = (design: any) => {
+    if (design.id) {
+      navigate(`/design/${design.id}`);
+    }
   };
 
-  // Keep numeric values, don’t prefix ₹ yet
+  // Keep numeric values, don't prefix ₹ yet
   const trendingDesigns =
     trendingData?.content?.slice(0, 6).map((design) => ({
       id: design.id,
@@ -109,9 +106,7 @@ const TrendingCollections = () => {
               <Card
                 key={design.id || index}
                 className="group overflow-hidden hover:shadow-elegant transition-all duration-300 cursor-pointer"
-                onClick={() =>
-                  handleNavigate(design.category, design.subcategory)
-                }
+                onClick={() => handleViewDesign(design)}
               >
                 <CardContent className="p-0">
                   <div className="relative overflow-hidden rounded-lg">
@@ -177,7 +172,7 @@ const TrendingCollections = () => {
             variant="outline"
             size="sm"
             onClick={() => navigate("/items?type=designs&trending=true")}
-            className="bg-background hover:bg-muted"
+            className="bg-gradient-primary text-black font-semibold hover:opacity-90"
           >
             View All Trending Designs
           </Button>
