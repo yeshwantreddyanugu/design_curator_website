@@ -356,7 +356,7 @@ const Products = () => {
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-muted/50 border-border focus:border-primary"
+              className="pl-10 bg-muted/50 border-border focus:border-primary"   
             />
           </form>
 
